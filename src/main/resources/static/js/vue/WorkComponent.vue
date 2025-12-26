@@ -1,56 +1,58 @@
 <template>
-	
-	<div class="container" :class="{'mobile-container': isMobile}">
-		
+
+	<div class="container" :class="{ 'mobile-container': isMobile }">
+
 		<div class="content">
 			<div class="content_inner">
-				<div class="tit_area flex-betw" >
+				<div class="tit_area flex-betw">
 					<h2 style="border-bottom: 0;">
-                       	작업관리
-                       	<input 
-                       		type="checkbox" 
-                       		name="listAllChannel" 
-                       		id="listAllChannel" 
-                       		v-model="isAllChecked"> <label for="listAllChannel">전체채널 조회</label>
-                    </h2>
+						작업관리
+						<input type="checkbox" name="listAllChannel" id="listAllChannel" v-model="isAllChecked"> <label
+							for="listAllChannel">전체채널 조회</label>
+					</h2>
 					<div class="input_section right_type flex-end" :style="isMobile && 'width: 100%;'">
-						<label for="workYear" v-if="!isMobile">작업 년/월</label> 
+						<label for="workYear" v-if="!isMobile">작업 년/월</label>
 						<select id="workYear" class="selectbox w120 ">
-							<option :value="year" v-for="year in startYearOfWork">{{year}}년</option>
+							<option :value="year" v-for="year in startYearOfWork">{{ year }}년</option>
 						</select>
 						<select id="workMonth" class="selectbox w120">
-							<option 
-								:value="month" 
-								:selected="month == toMonth"
-								v-for="month in 12">{{month}}월</option>
+							<option :value="month" :selected="month == toMonth" v-for="month in 12">{{ month }}월</option>
 						</select>
-						
-						<button type="button" class="btn btn_small03 excel-down" @click.prevent="excelDownload">월간작업 다운로드</button>
-						
+
+						<button type="button" class="btn btn_small03 excel-down" @click.prevent="excelDownload">월간작업
+							다운로드</button>
+
 					</div>
-                </div>
-				
+				</div>
+
 				<ul class="view_list_wrap bor_top">
 					<li>
 						<div class="list">
 							<div class="ch_tit">
-								<strong class="tit-channel-type">{{selectedChannel.name}}</strong> <!--<span class="bul_type01">개인</span>-->
-								<button type="button" class="btn_small03 work work-inspection" @click="goWorkRequest">작업요청</button>
-								<button type="button" class="btn_small03 work work-inspection users" @click="goUserWorkList">사용자 작업내역</button>
+								<strong class="tit-channel-type">{{ selectedChannel.name }}</strong>
+								<!--<span class="bul_type01">개인</span>-->
+								<button type="button" class="btn_small03 work work-inspection"
+									@click="goWorkRequest">작업요청</button>
+								<button type="button" class="btn_small03 work work-inspection users"
+									@click="goUserWorkList">사용자 작업내역</button>
 							</div>
-							
+
 							<div class="btn_edit_area">
 								<ul class="input_wrap no-pd" :style="isMobile && 'width: 100%;max-width:none;'">
-									<li class="input_area search_case" :style="isMobile && 'display: flex;justify-content:right;'">
+									<li class="input_area search_case"
+										:style="isMobile && 'display: flex;justify-content:right;'">
 										<label for="" v-if="!isMobile">검색</label>
-										<select class="selectbox" id="search_list" v-model="searchKey" :style="isMobile && 'width: 30%'">
+										<select class="selectbox" id="search_list" v-model="searchKey"
+											:style="isMobile && 'width: 30%'">
 											<option value="ALL">전체</option>
 											<option value="username">작성자</option>
 											<option value="request_title">제목</option>
 											<option value="request_content">내용</option>
 											<option value="request_id">화면아이디</option>
 										</select>
-										<input type="text" class="search-string" placeholder="검색어를 입력하세요" v-model="searchWord" @keyup.enter="listSearch" :style="isMobile && 'width: 70%'">
+										<input type="text" class="search-string" placeholder="검색어를 입력하세요"
+											v-model="searchWord" @keyup.enter="listSearch"
+											:style="isMobile && 'width: 70%'">
 										<button type="button" class="btn_search" @click.prevent="listSearch"></button>
 									</li>
 								</ul>
@@ -59,38 +61,40 @@
 						<div class="grey_list_type white none">
 							<ul class="work_list_wrap">
 								<li class="work_inner" id="request_list">
-									<dl  v-show="requestListShow">
-										<dt><p>작업요청내역</p>
-											<span>{{totRequestCnt}}건</span>
+									<dl v-show="requestListShow">
+										<dt>
+											<p>작업요청내역</p>
+											<span>{{ totRequestCnt }}건</span>
 										</dt>
 										<dd>
-											<div class="work_factor request" style="position: relative" v-for="item in requestList">
-												<span class="new_sticker" 
+											<div class="work_factor request" style="position: relative"
+												v-for="item in requestList">
+												<span class="new_sticker"
 													v-if="dateDiff(new Date(), item.regdate) >= -2">
 												</span>
 												<dl>
 													<dt>
-														<div class="bid">ID {{item.site_name != null ? '['+item.site_name+']' : ''}} {{item.request_id}} 
-															<a href="#none" 
-																v-if="isAdmin"
-																class="request_work_del" 
-																:data-reuqest-id="item.request_id" 
+														<div class="bid">ID {{ item.site_name != null ?
+															'[' + item.site_name+']' : ''}} {{ item.request_id }}
+															<a href="#none" v-if="isAdmin" class="request_work_del"
+																:data-reuqest-id="item.request_id"
 																:data-state="item.request_state"
 																@click="requestWorkDelete(item.id)"></a>
 														</div>
-														<a href="#none" @click="requestWorkDetail(item.id)">{{item.request_title}}</a>
+														<a href="#none"
+															@click="requestWorkDetail(item.id)">{{ item.request_title }}</a>
 													</dt>
 													<dd>
-														<div class="work_area" 
+														<div class="work_area"
 															v-html="getReplaceContent(item.request_content)">
 														</div>
 														<div class="state_step_area">
 															<span class="step01">
-															{{
-															item.request_state == 'PENDING' ? 
-															'보류' : 
-															('CANCEL' ? '보류' : item.request_state)
-															}}
+																{{
+																	item.request_state == 'PENDING' ?
+																		'보류' :
+																		('CANCEL' ? '보류' : item.request_state)
+																}}
 															</span>
 														</div>
 													</dd>
@@ -99,36 +103,26 @@
 										</dd>
 									</dl>
 									<div class="btn_more_area" v-if="requestList.length >= limit">
-				                    	<a href="#none" class="btn-more-view" @click="getRequestListMore">더보기</a>
+										<a href="#none" class="btn-more-view" @click="getRequestListMore">더보기</a>
 									</div>
 								</li> <!-- // 미확인 게시물 목록 -->
-<!-- 									<li class="work_inner" id="request_list"></li> -->
-								<li class="work_inner" id="process_list" >
-									<process-work-list 
-										v-if="processList.length > 0"
-										:prop-list="processList" 
-										:list-all-channel="listAllChannel"
-										@show-detail="processWorkDetail" 
-										:key="processListKey"
-										:search-key="searchKey"
-										:search-word="searchWord">
+								<!-- 									<li class="work_inner" id="request_list"></li> -->
+								<li class="work_inner" id="process_list">
+									<process-work-list v-if="processList.length > 0" :prop-list="processList"
+										:list-all-channel="listAllChannel" @show-detail="processWorkDetail"
+										:key="processListKey" :search-key="searchKey" :search-word="searchWord">
 									</process-work-list>
-										
+
 									<div class="btn_more_area" v-if="processList.length >= limit">
 										<a href="#none" class="btn-more-view" @click="getProcessListMore">더보기</a>
 									</div>
 								</li>
 								<li class="work_inner">
-									<complete-work-list 
-										v-if="completeList.length > 0"
-										:prop-list="completeList" 
-										:list-all-channel="listAllChannel"
-										@show-detail="processWorkDetail"
-										:key="completeKey"
-										:search-key="searchKey"
-										:search-word="searchWord">
+									<complete-work-list v-if="completeList.length > 0" :prop-list="completeList"
+										:list-all-channel="listAllChannel" @show-detail="processWorkDetail"
+										:key="completeKey" :search-key="searchKey" :search-word="searchWord">
 									</complete-work-list>
-									
+
 									<div class="btn_more_area" v-if="completeList.length >= limit">
 										<a href="#none" class="btn-more-view" @click="getCompleteListMore">더보기</a>
 									</div>
@@ -137,46 +131,39 @@
 						</div>
 					</li>
 				</ul>
-			
+
 			</div>
 		</div>
 	</div>
 	<!--// container-->
-	
+
 	<!-- 요청작업 상세보기 팝업 -->
-	<request-work-detail 
-		:id="requestWorkDetailId" 
-		:key="requestWorkDetailKey" 
-		v-if="requestWorkDetailId"
+	<request-work-detail :id="requestWorkDetailId" :key="requestWorkDetailKey" v-if="requestWorkDetailId"
 		@close="requestWorkDetailClose">
 	</request-work-detail>
-	
-	
+
+
 	<!--start: 진행중인 작업 상세보기 팝업 -->
-	<process-work-detail 
-		v-if="showProcessWorkDetail"
-		@show-detail="processWorkDetail"
-		@close-detail="processWorkDetailClose"
-		:opener="processWorkDetailCaller"
-		:id="processWordDetailId"
+	<process-work-detail v-if="showProcessWorkDetail" @show-detail="processWorkDetail"
+		@close-detail="processWorkDetailClose" :opener="processWorkDetailCaller" :id="processWordDetailId"
 		:key="processWordkDetailKey">
 	</process-work-detail>
 	<!--//end: 진행중인 작업 상세보기 팝업 -->
-	
+
 </template>
 
 <script>
 // 작업요청 상세보기 팝업 컴포넌트 로드
 const RequestWorkDetailComponent = defineAsyncComponent(() => {
-	return loadModule('/static/js/vue/RequestWorkDetailComponent.vue',vue3LoadOption);
+	return loadModule('/static/js/vue/RequestWorkDetailComponent.vue', vue3LoadOption);
 });
 // 진행중인 작업내역 컴포넌트 로드
 const ProcessWorkListComponent = defineAsyncComponent(() => {
-	return loadModule('/static/js/vue/ProcessWorkListComponent.vue',vue3LoadOption);
+	return loadModule('/static/js/vue/ProcessWorkListComponent.vue', vue3LoadOption);
 });
 // 진행중인 작업내역 상세보기 팝업 컴포넌트 로드
 const ProcessWorkDetailComponent = defineAsyncComponent(() => {
-	return loadModule('/static/js/vue/ProcessWorkDetailComponent.vue',vue3LoadOption);
+	return loadModule('/static/js/vue/ProcessWorkDetailComponent.vue', vue3LoadOption);
 });
 // 완료작업 목록 컴포넌트
 const CompleteWorkListComponent = defineAsyncComponent(() => {
@@ -229,17 +216,17 @@ export default {
 		// listAllChannel: true,
 	},
 	mounted: async function () {
-     
+
 		await this.read__loginInfo();
 
 		this.loginStore = useLoginInfoStore();
-	
+
 		this.loadList();
 
 		this.isAdmin = await this.$checkAuth();
-		
+
 		const eventBus = useEventBusStore();
-		
+
 		eventBus.addEvent('setConfirmCount', this.setConfirmCount);
 		eventBus.addEvent('loadList', this.loadList);
 	},
@@ -254,31 +241,31 @@ export default {
 
 			console.log(channelStore.selectedHeaderChannel, 'listAllChannel')
 			//if (isAllChecked) channelStore.selectedHeaderChannel = 'all'; 
-			
+
 			return channelStore.selectedHeaderChannel;
 		},
 		lastDayOfMonth: function () {
 			const date = new Date();
 			const year = date.getFullYear();
-			const month = date.getMonth() + 1; 
-			
-			return new Date(year, month, 0).getDate(); 
+			const month = date.getMonth() + 1;
+
+			return new Date(year, month, 0).getDate();
 		},
 		startYearOfWork: function () {
 			const date = new Date();
 			var year = date.getFullYear();
-			
-			const workTerm = year - 2024; 
+
+			const workTerm = year - 2024;
 			const minYear = year - workTerm;
-			
+
 			const yearList = [];
-			
+
 			do {
 				yearList.push(year);
-				
+
 				year = year - 1
 			} while (minYear <= year);
-			
+
 			return yearList;
 		},
 		toMonth: function () {
@@ -318,7 +305,7 @@ export default {
 			deep: false
 		},
 		listAllChannel: {
-			handler: function(newVal, oldVal) {
+			handler: function (newVal, oldVal) {
 				if (newVal !== 'all') {
 					this.isAllChecked = false;
 				} else {
@@ -334,39 +321,39 @@ export default {
 		...mapActions(useCommonStore, ['dateDiff']),
 		excelDownload: async function () {
 			// ArrayBuffer 만들어주는 함수
-		    function s2ab(s) {
-		        var buf = new ArrayBuffer(s.length); //convert s to arrayBuffer
-		        var view = new Uint8Array(buf);  //create uint8array as viewer
-		        for (var i=0; i<s.length; i++) view[i] = s.charCodeAt(i) & 0xFF; //convert to octet
-		        return buf;
-		    }
-			
+			function s2ab(s) {
+				var buf = new ArrayBuffer(s.length); //convert s to arrayBuffer
+				var view = new Uint8Array(buf);  //create uint8array as viewer
+				for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF; //convert to octet
+				return buf;
+			}
+
 			try {
 				let workYear = document.getElementById('workYear').value;
 				let workMonth = document.getElementById('workMonth').value;
-				
-				if (parseInt(workMonth) < 10) workMonth = '0'+workMonth;
-				
+
+				if (parseInt(workMonth) < 10) workMonth = '0' + workMonth;
+
 				const lastDayOfMonth = new Date(workYear, workMonth, 0).getDate();
-				
-				const startDate = workYear+"-"+workMonth+"-01";
-				const endDate = workYear+"-"+workMonth+"-"+lastDayOfMonth;
-				
-				const res = await axios.get(API_URL+'/work/month_work_list.dat?startDate='+startDate+'&endDate='+endDate);
+
+				const startDate = workYear + "-" + workMonth + "-01";
+				const endDate = workYear + "-" + workMonth + "-" + lastDayOfMonth;
+
+				const res = await axios.get(API_URL + '/work/month_work_list.dat?startDate=' + startDate + '&endDate=' + endDate);
 				const data = res.data;
 				const statePercent = {
 					PENDING: 0,
 					WORKING: 30,
 					CONFIRM: 50,
 					EDIT: 80,
-					COMPLETE: 100							
+					COMPLETE: 100
 				};
 				const partToKr = {
 					plan: '기획',
 					design: '디자인',
 					publish: '퍼블'
 				};
-				
+
 				let renew_data = [
 					[
 						'채널',
@@ -383,45 +370,45 @@ export default {
 						'비고'
 					]
 				];
-				
+
 				data.forEach((item) => {
-					
+
 					let row = [];
-					
+
 					row.push(item.site_name);
 					row.push(item.request_title);
 					row.push(item.requestor_name);
-					
-// 					item.part.sort()
+
+					// 					item.part.sort()
 					let planPart = item.part.filter((part) => part.name == 'plan');
 					let designPart = item.part.filter((part) => part.name == 'design');
 					let publishPart = item.part.filter((part) => part.name == 'publish');
-					
+
 					item.part = [...planPart, ...designPart, ...publishPart];
 
 					item.part.forEach(part => {
 						let newRow = [
-							...row, 
+							...row,
 							dateOrEmpty(part.part_work_rday), // 작업 요청일
 							dateOrEmpty(part.part_work_crday), // 완료 요청일
 							partToKr[part.name],
 							part.worker
-// 							statePercent[part.state] + '%'
+							// 							statePercent[part.state] + '%'
 						];
-						
+
 						if (part.work_content != null && part.work_content.length > 0) {
 							part.work_content.reverse().forEach((work) => {
 								//if (work.part_work_sday != null) {
-									let rsRow = [
-										...newRow,
-										work.content,
-										dateOrEmpty(work.part_work_sday),
-										dateOrEmpty(work.part_work_eday),
-										statePercent[part.state] + '%',
-										part.bigo
-									];	
-									
-									renew_data.push(rsRow);
+								let rsRow = [
+									...newRow,
+									work.content,
+									dateOrEmpty(work.part_work_sday),
+									dateOrEmpty(work.part_work_eday),
+									statePercent[part.state] + '%',
+									part.bigo
+								];
+
+								renew_data.push(rsRow);
 								//}
 							});
 						}
@@ -433,54 +420,54 @@ export default {
 								'',
 								statePercent[part.state] + '%',
 								part.bigo
-							];	
-							
+							];
+
 							renew_data.push(rsRow);
 						}
 					});
-				
+
 				});
-				
+
 				// workbook 생성
-			    const wb = XLSX.utils.book_new();
+				const wb = XLSX.utils.book_new();
 
-			    // sheet명 생성
-			    wb.SheetNames.push("sheet 1");
-			    // wb.SheetNames.push("sheet 2"); // 시트가 여러개인 경우
+				// sheet명 생성
+				wb.SheetNames.push("sheet 1");
+				// wb.SheetNames.push("sheet 2"); // 시트가 여러개인 경우
 
-			    // 이중 배열 형태로 데이터가 들어간다.
-// 			    let wsData = renew_data;
+				// 이중 배열 형태로 데이터가 들어간다.
+				// 			    let wsData = renew_data;
 				// var wsData2 = [['가1' , '가2', '가3'],['나1','나2','나3']];	// 시트가 여러개인 경우
 
-			    // 배열 데이터로 시트 데이터 생성
-			    const ws = XLSX.utils.aoa_to_sheet(renew_data);
+				// 배열 데이터로 시트 데이터 생성
+				const ws = XLSX.utils.aoa_to_sheet(renew_data);
 				// var ws2 = XLSX.utils.aoa_to_sheet(wsData2); 	//시트가 여러개인 경우
-			    
-			    // 시트 데이터를 시트에 넣기 ( 시트 명이 없는 시트인경우 첫번째 시트에 데이터가 들어감 )
-			    wb.Sheets["sheet 1"] = ws;
-			    // wb.Sheets["sheet 2"] = ws2;	//시트가 여러개인 경우
 
-			    // 엑셀 파일 쓰기
-			    const wbout = XLSX.write(wb, {bookType:'xlsx',  type: 'binary'});
+				// 시트 데이터를 시트에 넣기 ( 시트 명이 없는 시트인경우 첫번째 시트에 데이터가 들어감 )
+				wb.Sheets["sheet 1"] = ws;
+				// wb.Sheets["sheet 2"] = ws2;	//시트가 여러개인 경우
 
-			    // 파일 다운로드
-			    saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), workYear+"년"+workMonth+'월_월간작업내역.xlsx');
-			  
+				// 엑셀 파일 쓰기
+				const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+				// 파일 다운로드
+				saveAs(new Blob([s2ab(wbout)], { type: "application/octet-stream" }), workYear + "년" + workMonth + '월_월간작업내역.xlsx');
+
 			}
-			catch(error) {
+			catch (error) {
 				console.log(error);
 			}
-		    
+
 		},
 		onMessage: function (evt) {
-		    var data = evt.data;
-		    
-		    // 메세지 있음 표시
-		    this.$store.commit('setHasMessage', true);
-		    
-		    $('.message-alam').remove();
-		    
-		    var toastWrapper = $('<div>', {
+			var data = evt.data;
+
+			// 메세지 있음 표시
+			this.$store.commit('setHasMessage', true);
+
+			$('.message-alam').remove();
+
+			var toastWrapper = $('<div>', {
 				css: {
 					position: 'fixed'
 					, left: 0
@@ -495,31 +482,31 @@ export default {
 				}
 				, class: 'message-alam'
 			})
-		.html(data)
-			.on('click', function () {
-				toastWrapper.remove();
-			})
-			.appendTo('body');
-			
+				.html(data)
+				.on('click', function () {
+					toastWrapper.remove();
+				})
+				.appendTo('body');
+
 			//uijs.setMsgCnt();
 		},
 		allChannelWork: function () {
 			console.log('allChannelWork 실행');
 			// 전체 리스트 조회
 			this.loadList();
-			
+
 			// 검수요청수 다시 조회
 			this.setConfirmCount();
 		},
 		// 목록 조회 통합
-		loadList: async function(target = null) {
+		loadList: async function (target = null) {
 			console.log('loadList 실행');
 			this.loading('start');
-			
-			var get = {request: false, process: false, complete: false};
-			
+
+			var get = { request: false, process: false, complete: false };
+
 			if (target == null) {
-				get = {request: true, process: true, complete: true};
+				get = { request: true, process: true, complete: true };
 			}
 			else {
 				target.forEach(function (item) {
@@ -532,26 +519,26 @@ export default {
 				if (!get.request) {
 					console.warn('🚩요청된 작업목록은 조회 항목에서 제외되었습니다.');
 				} else {
-					const response =  await this.getRequestWorkList()
+					const response = await this.getRequestWorkList()
 					this.requestList = response.data;
-	
+
 					// 요청된 작업 갯수
 					const selectChannelCode = this.listAllChannel !== 'all' ? localStorage.channel : null;
-					axios.post(API_URL+'/work/working_cnt.dat', {
-						site_code: selectChannelCode, 
+					axios.post(API_URL + '/work/working_cnt.dat', {
+						site_code: selectChannelCode,
 						request_state: 'PENDING',
 						search_key: (this.searched !== undefined && this.searched) ? this.searchKey : null,
 						search_word: (this.searched !== undefined && this.searched) ? this.searchWord : null
 					})
-					.then(response => {
-						this.totRequestCnt = response.data;
-					}).catch(error => {console.log(error)});
+						.then(response => {
+							this.totRequestCnt = response.data;
+						}).catch(error => { console.log(error) });
 				}
 			} catch (error) {
 				console.log(error);
 				this.loading('stop');
 			}
-			
+
 			// 진행중인 작업 목록
 			try {
 				if (!get.process) {
@@ -559,13 +546,13 @@ export default {
 				} else {
 					const response = await this.getProcessWorkList();
 					this.processList = response.data;
-				} 
+				}
 				// 감수요청, 완료 카운팅
 				// this.setConfirmCount();
 			} catch (error) {
 				console.log(error);
-			} 
-			
+			}
+
 			// 완료된 작업 조회
 			try {
 				if (!get.complete) {
@@ -582,18 +569,18 @@ export default {
 		},
 		// 진행중인 작업내역 조회
 		getProcessWorkList: function () {
-            var sendParam = {
-   				site_code: this.listAllChannel !== 'all' ? this.getChannelCode : null,
-   				start: this.start.processWork,
-   				limit: this.limit
-   			};
+			var sendParam = {
+				site_code: this.listAllChannel !== 'all' ? this.getChannelCode : null,
+				start: this.start.processWork,
+				limit: this.limit
+			};
 
-   			if (this.searched !== undefined && this.searched) {
-   				sendParam.search_key = this.searchKey;
-   				sendParam.search_word = this.searchWord;
-   			};
-   			
-    		return axios.get(API_URL+"/work/work_ing_list.dat", {params: sendParam});
+			if (this.searched !== undefined && this.searched) {
+				sendParam.search_key = this.searchKey;
+				sendParam.search_word = this.searchWord;
+			};
+
+			return axios.get(API_URL + "/work/work_ing_list.dat", { params: sendParam });
 		},
 		// 요청작업 목록
 		getRequestWorkList: function () {
@@ -602,51 +589,51 @@ export default {
 				start: this.start.requestWork,
 				limit: this.limit
 			};
-			
+
 			if (this.searched !== undefined && this.searched) {
 				sendParam.search_key = this.searchKey;
 				sendParam.search_word = this.searchWord;
 			};
-			
-			return axios.post(API_URL+"/work/request_list.dat", sendParam);
+
+			return axios.post(API_URL + "/work/request_list.dat", sendParam);
 		},
 		// 작업완료 목록 조회
 		getCompleteWorkList: function () {
 			var sendParam = {
-   				site_code: this.listAllChannel !== 'all' ? this.getChannelCode : null,
-   				start: this.start.completeWork,
-   				limit: this.limit,
-   				orderkey: 'regdate',
+				site_code: this.listAllChannel !== 'all' ? this.getChannelCode : null,
+				start: this.start.completeWork,
+				limit: this.limit,
+				orderkey: 'regdate',
 				listsort: 'd',
-   			};
-			
-   			if (this.searched !== undefined && this.searched) {
-   				sendParam.search_key = this.searchKey;
-   				sendParam.search_word = this.searchWord;
-   			};
-   			
-   			return axios.get(API_URL+'/work/complete_list.dat', {params: sendParam});
+			};
+
+			if (this.searched !== undefined && this.searched) {
+				sendParam.search_key = this.searchKey;
+				sendParam.search_word = this.searchWord;
+			};
+
+			return axios.get(API_URL + '/work/complete_list.dat', { params: sendParam });
 		},
 		listSearch: function (e) {
 			this.searched = true;
-			
+
 			// page 초기화
-			for(var page in this.page) {
+			for (var page in this.page) {
 				this.page[page] = 1;
 			}
-			
+
 			// start 초기화
-			for(var start in this.start) {
+			for (var start in this.start) {
 				this.start[start] = 0;
 			}
-			
+
 			this.loadList();
 		},
 		// 진행중인 작업 목록 더보기
 		getProcessListMore: async function () {
 			this.page.processWork += 1;
 			this.start.processWork = (this.page.processWork - 1) * this.limit;
-			
+
 			this.loading('start');
 			try {
 				const response = await this.getProcessWorkList();
@@ -656,23 +643,23 @@ export default {
 					this.page.processWork -= 1;
 				}
 				else {
-					this.processList.push(...response.data);	
+					this.processList.push(...response.data);
 				}
 
 			} catch (error) {
 				console.log(error);
 				this.loading('stop');
 			}
-			
+
 			this.loading('stop');
 		},
 		// 요청 작업 목록 더보기
 		getRequestListMore: async function () {
 			this.page.requestWork += 1;
 			this.start.requestWork = (this.page.requestWork - 1) * this.limit;
-			
+
 			this.loading('start');
-				
+
 			try {
 				const response = await this.getRequestWorkList();
 
@@ -681,22 +668,22 @@ export default {
 					this.page.requestWork -= 1;
 				}
 				else {
-					this.requestList.push(...response.data);	
+					this.requestList.push(...response.data);
 				}
 			} catch (error) {
 				console.log(error);
 				this.loading('stop');
 			}
-			
+
 			this.loading('stop');
 		},
 		// 완료된 작업목록 더보기
 		getCompleteListMore: async function () {
 			this.page.completeWork += 1;
 			this.start.completeWork = (this.page.completeWork - 1) * this.limit;
-			
+
 			this.loading('start');
-			
+
 			try {
 				const response = await this.getCompleteWorkList();
 
@@ -705,7 +692,7 @@ export default {
 					this.page.completeWork -= 1;
 				}
 				else {
-					this.completeList.push(...response.data);	
+					this.completeList.push(...response.data);
 				}
 
 			} catch (error) {
@@ -723,19 +710,19 @@ export default {
 			// });
 			this.loading('stop');
 		},
-		processWorkDetail: function (id, caller='process') {
+		processWorkDetail: function (id, caller = 'process') {
 			const eventBus = useEventBusStore();
-			
+
 			this.showProcessWorkDetail = true;
 			// 진행중인 작업 상세보기할 아이디
 			this.processWordDetailId = id;
 			// 진행중인 작업 상세보기 컴포넌트 키 증가
 			this.processWordkDetailKey += 1;
 			// store workStore 실행
-			
-// 			this.$store.commit('workStore/setWorkDetailOpener', caller);
+
+			// 			this.$store.commit('workStore/setWorkDetailOpener', caller);
 			this.processWorkDetailCaller = caller;
-			
+
 			eventBus.workDetailOpener = caller;
 		},
 		processWorkDetailClose: function () {
@@ -747,10 +734,10 @@ export default {
 		// 요청작업 상세보기
 		requestWorkDetail: function (id) {
 			console.log(id);
-// 			if (this.isMobile) {
-// 				alert('PC버전 에서 확인해 주세요.');
-// 				return;
-// 			}
+			// 			if (this.isMobile) {
+			// 				alert('PC버전 에서 확인해 주세요.');
+			// 				return;
+			// 			}
 			this.requestWorkDetailId = id;
 		},
 		// 요청작업 삭제
@@ -759,34 +746,37 @@ export default {
 				alert('삭제 권한이 없습니다.');
 				return false;
 			}
-			
-			if(confirm('게시글을 삭제 하시겠습니까?')) {
-				var data = {'id': id}
-			
-				axios.post(API_URL+'/work/request_delete.dat', data)
-				.then(reponse => {
-					this.loadList(['request']);
-				})
-				.catch(error => {
-					console.log(error);
-				});
+
+			if (confirm('게시글을 삭제 하시겠습니까?')) {
+				var data = { 'id': id }
+
+				axios.post(API_URL + '/work/request_delete.dat', data)
+					.then(reponse => {
+						// 요청 목록과 진행중 목록 모두 새로고침
+						this.loadList(['request', 'process']);
+						// 상세보기 모달 닫기
+						this.showProcessWorkDetail = false;
+					})
+					.catch(error => {
+						console.log(error);
+					});
 			}
 		},
 		// 작업 컨펌 요청 갯수
 		setConfirmCount: function () {
 			var params = {
-				site_code : this.listAllChannel !== 'all' ? localStorage.channel : null
+				site_code: this.listAllChannel !== 'all' ? localStorage.channel : null
 			}
 
 			console.log(params, 'setConfirmCount');
-			
-   			axios.get(API_URL+'/work/confirm_cnt.dat', {params: params})
-   			.then(response => {
-   				this.confirmCount.REQUEST_CNT = response.data;
-   			})
-   			.catch(error => {
-   				console.log(error);
-   			});
+
+			axios.get(API_URL + '/work/confirm_cnt.dat', { params: params })
+				.then(response => {
+					this.confirmCount.REQUEST_CNT = response.data;
+				})
+				.catch(error => {
+					console.log(error);
+				});
 		},
 		getReplaceContent: function (str) {
 			return str.replace(/\r\n/g, '<br>');
