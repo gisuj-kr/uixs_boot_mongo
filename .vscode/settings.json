@@ -1,0 +1,41 @@
+{
+    // ============================================
+    // Java 런타임 설정
+    // ============================================
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-17",
+            "path": "C:\\Program Files\\Java\\jdk-17",
+            "default": true
+        }
+        // Java 11 설치 후 아래 주석 해제하고 위 설정을 주석 처리하세요
+        // {
+        //     "name": "JavaSE-11",
+        //     "path": "C:\\Program Files\\Java\\jdk-11",
+        //     "default": true
+        // }
+    ],
+    // ============================================
+    // Spring Boot 설정
+    // ============================================
+    "spring-boot.ls.java.home": "C:\\Program Files\\Java\\jdk-17",
+    // ============================================
+    // Maven/Java 프로젝트 설정
+    // ============================================
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.compile.nullAnalysis.mode": "automatic",
+    // Lombok 지원 활성화
+    "java.jdt.ls.lombokSupport.enabled": true,
+    // ============================================
+    // 파일 인코딩 및 포맷터 설정
+    // ============================================
+    "files.encoding": "utf8",
+    // JSP 파일 지원
+    "[jsp]": {
+        "editor.defaultFormatter": "vscode.html-language-features"
+    },
+    // Vue 파일 지원
+    "[vue]": {
+        "editor.defaultFormatter": "Vue.volar"
+    }
+}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+	<meta name="format-detection" content="telephone=no">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<title>수협은행</title>
+	<link rel="stylesheet" href="./css/reset.css">
+	<link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/common.css">
+	<!-- <script src="https://unpkg.com/@plant/plant@2.4.0/dist/plant.js"></script> -->
+	<script type="text/javascript" src="./js/jquery-1.12.4.js"></script>
+</head>
+<style>
+    
+</style>
+<body >
+    <div class="g_wrapper" >
+        <div class="g_header">
+            <div class="inner">
+                <h1><img src="./img/ui/img_logo.png"></h1>
+                <ul>
+                    <li><a href="guide01_01.html">Foundation</a></li>
+                    <li><a href="guide02_01.html" class="on">Components</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="g_container">
+            <div class="g_left">
+                <ul>
+                    <li class="tit">Foundation</li>
+                    <li><a href="guide02_01.html">Button</a></li>
+                    <li><a href="guide02_02.html" class="on">Bottom Sheet</a></li>
+                    <li><a href="guide02_03.html">Dropdown</a></li>
+                    <li><a href="guide02_04.html">List</a></li>
+                    <li><a>Search</a></li>
+                    <li><a>Selection Controls</a></li>
+                    <li><a >Tab</a></li>
+                    <li><a>Text Field</a></li>
+                </ul>
+            </div>
+            <div class="g_content">
+                <h2>Bottom Sheet</h2>
+                <dl class="sub_txt">
+                    <dt>Definition</dt>
+                    <dd>Bottomsheet는 화면의 이동없이 부가적인 액션 및 컨텐츠를 제공한다.</dd>
+                </dl>
+                <div class="img_txt" style="padding: 20px; margin-top: 20px;">
+                    <ol>
+                        <li><span>1</span>프로세스를 보조하는 수단으로 사용자가 특정 액션 및 콘텐츠에 집중해야 하는 경우 사용한다.</li>
+                        <li><span>2</span>화면과 동일한 너비의 크기로 하단 영역에 고정되며, 다른 UI요소 앞에 위치한다.</li>
+                        <li><span>3</span>활성화 되었을 때 Bottomsheet를 제외한 UI영역에 Scrim을 제공해야 하며, Scrim영역안에 있는 콘텐츠의 조작을 차단해야 한다.</li>
+                        <li><span>4</span>Bottomsheet영역은 스크롤을 제공하지 않는 것을 우선으로 하되, 컨텐츠 내용이 길어지면 스크롤을 사용할 수 있다.</li>
+                    </ol>
+                </div>
+                <dl class="sub_txt" style="margin-top: 70px">
+                    <dt>Anatomy</dt>
+                    <dd>
+                        <div class="just_txt">
+                            <img src="./img/ui/img_02_08.png">
+                            <ol>
+                                <li><span>1</span><strong>Scrim</strong><p>Bottomsheet 아래 투명도를 가진 레이어를 위치 시켜 Bottomsheet를 제외한 UI요소의 조작을 차단하고 사용자가 해당 영역을 선택하여 Bottomsheet를 종료할 수 있다.</p></li>
+                                <li><span>2</span><strong>Header</strong><p>Bottomsheet의 내용을 대표할 수 있는 타이틀을 헤더에 배치를 하며, 정렬은 왼쪽정렬을 기본으로 하되, 경우에 따라 가운데 정렬을 할 수 있다. Bottomsheet를 종료할 수 있는 close버튼을 헤더 우측에 제공한다.</p></li>
+                                <li><span>3</span><strong>Contents Area</strong><p>정보의 성격에 따라 리스트, 텍스트, 버튼 등의 형태로 제공할 수 있다.</p></li>
+                                <li><span>4</span><strong>Button Area <em>(Optional)</em></strong><p>버튼 영역에는 하나의 액션 버튼을 원칙으로 하되, 경우에 따라 2개의 버튼을 사용할 수 있다.</p></li>
+                            </ol>
+                        </div>
+                    </dd>
+                </dl>
+                
+                <dl class="sub_txt" style="margin-top: 70px">
+                    <dt>Types</dt>
+                    <dd>
+                        <div class="just_txt">
+                            <div class="g_txt">
+                                <p><strong>리스트 선택 유형</strong></p>
+                                <img src="./img/ui/img_02_09.png">
+                            </div>
+                            <div class="g_txt">
+                                <p><strong>정보 안내 유형</strong></p>
+                                <img src="./img/ui/img_02_10.png">
+                            </div>
+                            <div class="g_txt">
+                                <p><strong>Date picker UI 유형</strong></p>
+                                <img src="./img/ui/img_02_11.png">
+                            </div>
+                        </div>
+                    </dd>
+                </dl>
+                
+            </div>
+            
+        </div>
+    </div>
+</body>
+</html>

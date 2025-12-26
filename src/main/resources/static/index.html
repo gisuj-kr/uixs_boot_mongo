@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta http-equiv="Expires" content="-1">
+	<meta http-equiv="Pragma" content="no-cache">
+	<meta http-equiv="Cache-Control" content="No-Cache">
+	<title>수협은행-플랫폼 UI/UX 업무관리</title>
+	<link rel="stylesheet" href="/static/css/common.css">
+	<link rel="stylesheet" href="/static/css/jstree.css">
+	<link rel="stylesheet" href="/static/css/jquery-ui.min.css">
+
+
+	<script type="text/javascript" src="/static/js/moment.js"></script>
+	<script type="text/javascript" src="/static/js/jquery-1.11.0.min.js"></script>
+	<script type="text/javascript" src="/static/js/jquery-ui.js"></script>
+
+
+	<script type="text/javascript" src="/static/js/jstree.js"></script>
+	<script type="text/javascript" src="/static/js/sockjs.min.js"></script>
+
+	<!-- <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> -->
+	<!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script> -->
+	<!-- <script src="https://unpkg.com/vuex@3.0.0/dist/vuex.js"></script> -->
+	<script type="text/javascript" src="/static/js/axios.min.js"></script>
+	<!-- <%-- <script type="text/javascript" src="/static/js/vue.min.js"></script> --%> -->
+	<!-- <%-- <script type="text/javascript" src="/static/js/vuex.js"></script> --%> -->
+	<script type="text/javascript" src="/static/js/vue.global.dev.js"></script>
+	<script type="text/javascript" src="/static/js/vue-demi.js"></script>
+	<script type="text/javascript" src="/static/js/pinia.iife.dev.js"></script>
+	<script type="text/javascript" src="/static/js/vue-router.global.js"></script>
+
+
+	<script type="text/javascript" src="/static/js/vue3-sfc-loader.js"></script>
+
+	<script type="text/javascript" src="/static/js/uijs.js"></script>
+
+	<script type="text/javascript" src="/static/js/src/root.js"></script>
+	<script type="text/javascript" src="/static/js/src/mixins.js"></script>
+	<script type="text/javascript" src="/static/js/src/router.js"></script>
+	<script type="text/javascript" src="/static/js/xlsx.full.min.js"></script>
+	<script type="text/javascript" src="/static/js/FileSaver.min.js"></script>
+
+	<script type="text/javascript" src="/static/js/iatree.js"></script>
+</head>
+
+<body>
+
+	<div class="wrapper" id="app">
+		<header-component v-if="!isMainPage" :url-path="urlPath"></header-component>
+
+		<div :class="{'set-admin-body': isMainPage}">
+			<router-view ref="workComponent"></router-view>
+		</div>
+	</div>
+
+	<script>
+		const app = createApp({
+			// 		mixins: [channelMixin],
+			data: () => {
+				return {
+					isMainPage: false,
+					urlPath: '/',
+				}
+			},
+
+			methods: {
+				handleChannelChange() {
+					console.log(this.$refs.workComponent)
+					// 				this.$refs.work.listAllChannel = false;
+					// Work.vue 컴포넌트의 listAllChannel 값을 변경
+					if (this.$refs.workComponent) {
+						this.$refs.workComponent.listAllChannel = !this.$refs.workComponent.listAllChannel;
+
+						this.$refs.workComponent.changeChannel();
+					}
+				}
+			},
+			watch: {
+				$route() {
+					this.isMainPage = this.$router.currentRoute.value.path == '/' ||
+						this.$router.currentRoute.value.path == '/login';
+
+					this.urlPath = this.$router.currentRoute.value.matched[0].path;
+				}
+			}
+		});
+		// 관리자 체크
+		app.config.globalProperties.$checkAuth = async () => {
+			try {
+				const response = await axios.get(`${API_URL}/member/checkAuth`, { withCredentials: true });
+				if (response.status === 200) {
+					return true;
+				} else {
+					return false;
+				}
+			} catch (error) {
+				console.error('Permission check failed:', error);
+				return false;
+			}
+		};
+		app.component('header-component', HeaderComponent);
+		app.use(pinia);
+		app.use(router)
+		app.mount('#app');
+	</script>
+</body>
+
+</html>

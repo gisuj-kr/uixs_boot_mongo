@@ -1,0 +1,14 @@
+{
+    // 이 프로젝트에서 권장하는 VS Code Extension 목록
+    // 프로젝트를 열면 자동으로 설치 알림이 표시됩니다
+    "recommendations": [
+        // Java 개발 환경 (필수)
+        "vscjava.vscode-java-pack", // Extension Pack for Java (Java 언어 지원, 디버거, Maven 등 포함)
+        // Spring Boot 개발 환경 (필수)
+        "vmware.vscode-boot-dev-pack", // Spring Boot Extension Pack (Spring Boot 지원, Dashboard 등)
+        // 프론트엔드 개발 (Vue.js)
+        "Vue.volar", // Vue - Official (Vue 3 공식 Extension)
+        // 데이터베이스 (MongoDB)
+        "mongodb.mongodb-vscode" // MongoDB for VS Code (MongoDB 연결 및 쿼리)
+    ]
+}

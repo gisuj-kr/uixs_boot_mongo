@@ -1,0 +1,1490 @@
+<template>
+	<!-- 템플릿에 추가 -->
+	<div v-if="processingProgress > 0 && processingProgress < 100" class="progress-container">
+		<div class="progress-text">파일 정보 수집 중... {{ processingProgress }}%</div>
+		<div class="progress-bar">
+			<div class="progress-fill" :style="{width: processingProgress + '%'}"></div>
+		</div>
+	</div>
+	<!--container-->
+	<div class="container no-max-value">
+		
+		<div class="content">
+			<div class="content_inner">
+				<div class="html-list-util-gnb-area" v-if="ia_tabs.length > 1">
+					<a 
+						href="#none"
+							v-for="(tab, index) in ia_tabs" 
+							:class="{selected : tabIndex == index}" 
+							@click.prevent="siteMapChange(index)">{{tab.tab_name}}</a>
+				</div>
+				<div class="search-wrap">
+					<div class="input_section">
+						<ul class="input_wrap">
+							<li class="input_area search_case">
+								<label for="search-string">검색</label>
+								<input type="text" placeholder="화면명을 입력하세요" v-model="searchText" @keyup.enter="searchHandler" :style="isMobile && 'width: 82%'">
+								<button type="button" class="btn_search" @click.prevent="searchHandler"></button>
+							</li>
+							<li style="margin-top: 10px;">
+                                <dl class="horizontal-dl">
+                                    <dt>최종수정일:</dt>
+                                    <dd class="button-group">
+										<!-- 주 단위 필터링 버튼들 -->
+										<button type="button" class="round-button" @click="filterByLastWeek(1)">1주일</button>
+										<button type="button" class="round-button" @click="filterByLastWeek(2)">2주일</button>
+										<button type="button" class="round-button" @click="filterByLastWeek(3)">3주일</button>
+
+                                        <button type="button" class="round-button" @click="filterByDate(1)">1개월</button>
+                                        <button type="button" class="round-button" @click="filterByDate(2)">2개월</button>
+                                        <button type="button" class="round-button" @click="filterByDate(3)">3개월</button>
+                                        <button type="button" class="round-button" @click="sortByDate">최신순</button>
+                                        <button type="button" class="round-button" @click="resetData">초기화</button>
+                                    </dd>
+                                </dl>
+                            </li>
+						</ul>
+					</div>
+				</div>
+				<div class="tit_area" >
+					<h2 v-if="pageChannel != 'SH_PA'">화면목록</h2>
+					<div v-if="pageChannel === 'SH_PA'" class="list-version">
+						<select name="" id=""  v-model="listVersion" @change="changeListVersion">
+							<option value="asis">화면목록 [AS-IS]</option>
+							<option value="tobe">화면목록 [TO-BE]</option>
+						</select>
+					</div>
+					<span class="tit_btn_area" v-if="!isMobile">
+						<a :href="iaDownloadUrl" target="_blank" class="btn_mid_type01">메뉴 다운로드(excel)</a>
+					</span>
+				</div>
+				
+				<ul class="view_list_wrap bor_top">
+					<li>
+						<ul class="pb_w_tab">
+							<li v-for="(header, hdIdx) in EXCEL_JSON_HEADER">
+								<a :href="'#'+header">{{header}}</a>
+							</li>
+						</ul>
+						
+						<div class="grey_list_type white" style="padding: 0" >
+							<div class="con_area">
+								<!-- html loop 시작 -->
+								<template v-for="(data, index) in searched_data" :key="index">
+								<div class="menu_wrap" 
+									v-if="data.length > 0"
+									:data-group-index="index"
+									ref="groupObserverTargets"
+								>
+									<div class="menu_tit on">
+										<div class="row-color-info" v-if="listVersion == 'tobe'">
+											<div><span class="row-color-info__renewal-1st"></span>1차리뉴얼</div>
+											<div><span class="row-color-info__renewal-2st"></span>2차리뉴얼</div>
+											<div><span class="row-color-info__renewal-1st--modify"></span>1차개선</div>
+											<div><span class="row-color-info__self--modify"></span>개선작업</div>
+											<div><span class="row-color-info__as-is--modify"></span>as-is_개선</div>
+										</div>
+										<button 
+											type="button"
+											:id="EXCEL_JSON_HEADER[index]" 
+											aria-expanded="true"
+											:aria-controls="'view-list-table'+index"
+											@click="accordion($event, index)">{{EXCEL_JSON_HEADER[index]}}<span class="group-item-count">({{data.length}}개)</span></button>
+									</div>
+
+									<div v-if="isGroupVisible(index)">
+										<div v-if="listVersion == 'tobe'">
+											<html-list-linew-component
+												:key="index"
+												:is-mobile="isMobile"
+												:item="data"
+												:idx="index"
+												:excel-json-header="EXCEL_JSON_HEADER"
+												:doc-base="selectedChannel.doc_base"
+												@open-html="openHtml"
+												:ref="el => setRefs(el, index)"
+											>
+											</html-list-linew-component>
+										</div>
+										<div v-else-if="listVersion == 'asis' && storageChannel == 'SH_PA'"> 
+											<html-list-component
+												:key="index"
+												:is-mobile="isMobile"
+												:item="data"
+												:idx="index"
+												:excel-json-header="EXCEL_JSON_HEADER"
+												:doc-base="selectedChannel.doc_base"
+												@open-html="openHtml"
+												:ref="el => setRefs(el, index)"
+											>
+											</html-list-component>
+										</div>
+									</div>
+
+									<!-- 아직 로딩되지 않은 그룹을 위한 플레이스홀더 -->
+									<div v-else class="lazy-placeholder">
+										<div class="placeholder-content">
+											<div class="placeholder-text">
+												스크롤하면 {{data.length}}개 항목이 로드됩니다...
+											</div>
+											<div class="placeholder-loader">
+												<div class="loader-dots">
+													<span></span>
+													<span></span>
+													<span></span>
+												</div>
+											</div>
+										</div>
+									</div>
+
+								</div>
+								</template>
+							</div>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<!--// container-->
+	
+	<!-- 모바일 html 미리보기 -->
+	<div class="modal_layer_pop" v-show="htmlShow" @click="closeHtmlFromDim">
+		<div class="mobile_view" style="position:absolute">
+			<ul class="box_type_check" style="position: absolute; top: -58px; left: 5px;">
+				<li>
+					<input type="radio" id="resize-viewer1" name="resize-viewer" value="375" class="resize-viewer" checked>
+					<label for="resize-viewer1">375px</label>
+				</li>
+				<li >
+					<input type="radio" id="resize-viewer2" name="resize-viewer"   value="360" class="resize-viewer">
+					<label for="resize-viewer2">360px</label>
+				</li>
+				<li>
+					<input type="radio" id="resize-viewer3" name="resize-viewer" value="320" class="resize-viewer">
+					<label for="resize-viewer3">320px</label>
+				</li>
+				<li>
+					<input type="text" readonly id="resize-viewer-custom" name="resize-viewer" value="375px" class="resize-viewer" style="font-size: 12px; border: 1px solid #ccc">
+				</li>
+			</ul>
+			<iframe src="about:blank" frameborder="0" id="html-view-area" style="width: 100%; height: 100%; display: none; overflow: hidden;"></iframe>
+		</div>
+	</div>
+	
+	<div class="ia-go-top"><button type="button" @click="goTop">top</button></div>
+
+</template>
+
+
+<script>
+const HtmlListComponent = defineAsyncComponent(
+	() => loadModule('/static/js/vue/HtmlListComponent.vue', vue3LoadOption)
+);
+const HtmlListRenewComponent = defineAsyncComponent(
+	() => loadModule('/static/js/vue/HtmlListRenewComponent.vue', vue3LoadOption)
+);
+// SH_PA
+export default {
+	mixins: [channelMixin],
+	components: {
+		'html-list-component': HtmlListComponent,
+		'html-list-linew-component': HtmlListRenewComponent
+	},
+	data: {
+		list: [],
+		iaList: [], // ia list
+		searchList: [],
+		searchText: '',
+		htmlShow: false, // html 클릭하여 미리보기 여부
+		resizing: false, // html 미리보기 팝업창 리사이징 여부
+		perList: [], // 개이뱅킹
+		bizList: [], // 기업뱅킹
+		pdtList: [], // 금융상품몰 리스트
+		autList: [], // 인증센터
+		serviceList: [], // 서비스
+		tabGubun: '개인뱅킹', // 개인뱅킹 선택인경우
+		tabChannel: false,
+		EXCEL_JSON_HEADER: [],
+		EXCEL_JSON_DATA: [],
+		searched_data: [],
+		domain: 'http://13.125.6.144:7001',
+		iaDownloadUrl: '',
+		tabIndex: 0,
+		ia_tabs: [],
+		urlCache: new Map(),
+		ORIGINAL_EXCEL_JSON_HEADER: null,
+		worker: null, // WebWorker 인스턴스
+		processingProgress: 0, // 진행률
+		storageChannel: localStorage.getItem('channel'),
+		listVersion: 'tobe',
+		refsArray: [],
+		compoVisible: false,  // data-box 가시성 상태
+      	observer: null,
+		// 지연 로딩 관련 속성
+		lazyLoading: {
+			visibleGroups: new Set(),        // 현재 보이는 그룹들의 인덱스
+			observer: null,                  // Intersection Observer 인스턴스
+			rootMargin: '200px',             // 미리 로딩할 여백 (200px 미리 준비)
+			threshold: 0.1                   // 10% 보이면 트리거
+		},
+		// Ctrl+F 관련
+		browserSearchActive: false,
+		allGroupsForceLoaded: false
+	},
+	computed: {
+		docRoot: function () {
+			var channel = this.getChannelCode;
+			var url = '';
+			
+			return url;
+		},
+		htmlChannel: function () {
+			const channelStore = useChannelStore();
+
+			return channelStore.selectedHeaderChannel;
+		},
+		pageChannel() {
+			return this.storageChannel;
+		},
+		// 모든 그룹이 로드되었는지 확인
+		isAllGroupsLoaded() {
+			const totalGroups = this.getTotalVisibleGroups();
+			return this.lazyLoading.visibleGroups.size >= totalGroups;
+		}
+	},
+	watch: {
+		htmlChannel: {
+			handler: function (nVal, oVal) {
+				if (nVal !== 'all' && nVal !== oVal) {
+					this.storageChannel = nVal;
+					// 엑셀[html list] 로드
+					this.loadExcelWithLastModified();
+				}
+			},
+			deep: false
+		},
+		searched_data: {
+			handler() {
+				// 데이터가 변경되면 지연 로딩 재설정
+				this.$nextTick(() => {
+					this.resetLazyLoading();
+				});
+			},
+			deep: false
+		}
+	},
+	mounted: async function () {
+		// 엑셀[html list] 로드
+		await this.loadExcelWithLastModified();
+
+		// 컴포넌트 마운트 시 Observer 초기화
+    	//this.initDataBoxObserver();
+		// 미리보기 영역 resize
+	
+		$('.mobile_view').resizable({
+			minWidth: 320,
+			minHeight: 640,
+			handles: 'w,e',
+			start: (event, ui) => {
+				$('#html-view-area').css('pointer-events', 'none');
+				
+				this.resizing = true; // html 미리보기 팝업창 리사이징 여부
+			},
+			stop: function (event, ui) {
+				$('#html-view-area').css('pointer-events', 'auto');
+				$('#resize-viewer-custom').val(ui.size.width + 'px');
+				
+				ui.element[0].style.left = 'auto';
+				
+				setTimeout(() => {
+					this.resizing = false; // html 미리보기 팝업창 리사이징 여부
+				})
+			}
+		});
+	
+		
+		// 미리보기 화면 리사이즈
+		$('.resize-viewer').on('change', function () {
+			var size = $(this).val();
+
+			$('.mobile_view').width(size);
+			
+			$('#resize-viewer-custom').val(size+'px');
+		})
+		.on('focus', function () {
+			$('.box_type_check').find('input:radio').each(function () {
+				$(this).prop('checked', false);
+			})
+		});
+		
+	 	// 미리보기영역 사이즈 커스텀 input 에서 엔터 친 경우 미리보기창 사이즈 조절
+		$('#resize-viewer-custom').on('keyup', function () {
+			var size = parseInt($(this).val());
+			
+			$('.mobile_view').width(size);
+		});
+
+		// Ctrl+F 감지 이벤트 리스너 등록
+		document.addEventListener('keydown', this.handleKeyboardSearch);
+		
+		// F3 (다음 찾기) 감지
+		document.addEventListener('keydown', (event) => {
+			if (event.key === 'F3') {
+				this.ensureAllGroupsLoaded();
+			}
+		});
+	},
+	methods: {
+		// 지연로딩 메서드
+		// 스크롤을 특정 그룹으로 이동하면서 해당 그룹 로드
+		scrollToGroupAndLoad(groupIndex) {
+			// 먼저 그룹을 로드
+			this.forceLoadGroup(groupIndex);
+			
+			// DOM 업데이트 후 스크롤
+			this.$nextTick(() => {
+				const targetElement = document.getElementById(this.EXCEL_JSON_HEADER[groupIndex]);
+				if (targetElement) {
+					targetElement.scrollIntoView({ 
+						behavior: 'smooth', 
+						block: 'start' 
+					});
+				}
+			});
+		},
+
+		// 검색 결과 하이라이트와 함께 해당 그룹으로 이동
+		highlightSearchResultAndScroll() {
+			if (this.searchText.trim() === '') return;
+			
+			// 검색 결과가 있는 첫 번째 그룹 찾기
+			for (let i = 0; i < this.searched_data.length; i++) {
+				if (this.searched_data[i].length > 0) {
+					this.scrollToGroupAndLoad(i);
+					break;
+				}
+			}
+		},
+		
+		// 메모리 사용량 최적화 - 보이지 않는 그룹 언로드
+		optimizeMemoryUsage() {
+			const viewportHeight = window.innerHeight;
+			const scrollY = window.scrollY;
+			
+			// 현재 화면에서 너무 멀리 떨어진 그룹들 언로드
+			this.lazyLoading.visibleGroups.forEach(groupIndex => {
+				const element = document.querySelector(`[data-group-index="${groupIndex}"]`);
+				if (element) {
+					const rect = element.getBoundingClientRect();
+					const distanceFromViewport = Math.abs(rect.top - viewportHeight / 2);
+					
+					// 화면에서 2배 이상 멀어진 그룹은 언로드 (메모리 절약)
+					if (distanceFromViewport > viewportHeight * 2) {
+						this.lazyLoading.visibleGroups.delete(groupIndex);
+						console.log(`그룹 ${groupIndex} 메모리에서 언로드됨`);
+					}
+				}
+			});
+		},
+		
+		// 성능 모니터링
+		getPerformanceStats() {
+			const stats = this.getLazyLoadingStats();
+			const totalRows = this.searched_data.reduce((sum, group) => sum + group.length, 0);
+			const loadedRows = Array.from(this.lazyLoading.visibleGroups)
+				.reduce((sum, index) => sum + (this.searched_data[index]?.length || 0), 0);
+			
+			return {
+				groups: stats,
+				rows: {
+					total: totalRows,
+					loaded: loadedRows,
+					percentage: totalRows > 0 ? Math.round((loadedRows / totalRows) * 100) : 0
+				},
+				memoryOptimized: true
+			};
+		},
+		
+		// 개발자 도구용 - 모든 통계 출력
+		// console 창에 $vm0.debugLazyLoading() 실행
+		debugLazyLoading() {
+			const perfStats = this.getPerformanceStats();
+			console.group('🚀 지연 로딩 상태');
+			console.log('📊 그룹 통계:', perfStats.groups);
+			console.log('📋 행 통계:', perfStats.rows);
+			console.log('🎯 보이는 그룹:', Array.from(this.lazyLoading.visibleGroups).sort());
+			console.log('💾 메모리 사용량:', `${perfStats.rows.percentage}% 로드됨`);
+			console.groupEnd();
+			
+			return perfStats;
+		},
+		// 특정 그룹이 보이는지 확인
+		isGroupVisible(index) {
+			return this.lazyLoading.visibleGroups.has(index);
+		},
+		
+		// Intersection Observer 초기화
+		initLazyLoading() {
+			// 기존 Observer가 있다면 정리
+			this.destroyLazyLoading();
+			
+			// Observer 콜백 함수
+			const callback = (entries) => {
+				entries.forEach(entry => {
+					const groupIndex = parseInt(entry.target.dataset.groupIndex);
+					
+					if (entry.isIntersecting) {
+						// 그룹이 보이게 되면 visibleGroups에 추가
+						this.lazyLoading.visibleGroups.add(groupIndex);
+						console.log(`그룹 ${groupIndex} (${this.EXCEL_JSON_HEADER[groupIndex]}) 로드됨`);
+					} else {
+						// 그룹이 화면에서 멀어지면 제거 (메모리 절약)
+						// 단, 너무 자주 제거하면 깜빡임이 있을 수 있으므로 선택적으로 사용
+						// this.lazyLoading.visibleGroups.delete(groupIndex);
+					}
+				});
+			};
+			
+			// Observer 옵션
+			const options = {
+				root: null,
+				rootMargin: this.lazyLoading.rootMargin,
+				threshold: this.lazyLoading.threshold
+			};
+			
+			// Observer 생성
+			this.lazyLoading.observer = new IntersectionObserver(callback, options);
+			
+			// 관찰 시작
+			this.observeGroups();
+		},
+		
+		// 그룹들 관찰 시작
+		observeGroups() {
+			this.$nextTick(() => {
+				const targets = this.$refs.groupObserverTargets;
+				if (!targets) return;
+				
+				// ref가 배열인 경우와 단일 요소인 경우 처리
+				const elements = Array.isArray(targets) ? targets : [targets];
+				
+				elements.forEach(element => {
+					if (element && this.lazyLoading.observer) {
+						this.lazyLoading.observer.observe(element);
+					}
+				});
+				
+				console.log(`${elements.length}개 그룹 관찰 시작`);
+			});
+		},
+		
+		// 지연 로딩 정리
+		destroyLazyLoading() {
+			if (this.lazyLoading.observer) {
+				this.lazyLoading.observer.disconnect();
+				this.lazyLoading.observer = null;
+			}
+			this.lazyLoading.visibleGroups.clear();
+		},
+		
+		// 데이터 변경 시 지연 로딩 재초기화
+		resetLazyLoading() {
+			this.destroyLazyLoading();
+			
+			// 약간의 지연 후 재초기화 (DOM 업데이트 대기)
+			this.$nextTick(() => {
+				setTimeout(() => {
+					this.initLazyLoading();
+				}, 100);
+			});
+		},
+		
+		// 첫 번째 그룹들 미리 로드 (초기 화면)
+		preloadInitialGroups(count = 3) {
+			for (let i = 0; i < Math.min(count, this.searched_data.length); i++) {
+				if (this.searched_data[i].length > 0) {
+					this.lazyLoading.visibleGroups.add(i);
+				}
+			}
+		},
+		
+		// 특정 그룹 강제 로드
+		forceLoadGroup(index) {
+			this.lazyLoading.visibleGroups.add(index);
+		},
+		
+		// 모든 그룹 강제 로드 (검색 시 유용)
+		forceLoadAllGroups() {
+			for (let i = 0; i < this.searched_data.length; i++) {
+				if (this.searched_data[i].length > 0) {
+					this.lazyLoading.visibleGroups.add(i);
+				}
+			}
+		},
+		
+		// 현재 로드된 그룹 통계
+		getLazyLoadingStats() {
+			const totalGroups = this.searched_data.filter(data => data.length > 0).length;
+			const loadedGroups = this.lazyLoading.visibleGroups.size;
+			
+			return {
+				total: totalGroups,
+				loaded: loadedGroups,
+				percentage: totalGroups > 0 ? Math.round((loadedGroups / totalGroups) * 100) : 0
+			};
+		},
+		// ed-지연로딩 메서드
+		changeListVersion(e) {
+			this.loadExcelWithLastModified();
+		},
+		// 고동시성 최적화된 Vue3 Options API 코드 (WebWorker 제거, 날짜 정보 보장)
+		// 1) 고동시성 처리 함수
+		async runWithHighConcurrency(tasks, concurrency = 80) {
+			const results = [];
+			let activeCount = 0;
+			let taskIndex = 0;
+			let completed = 0;
+			const total = tasks.length;
+
+			return new Promise((resolve) => {
+				const next = () => {
+					if (taskIndex === tasks.length && activeCount === 0) {
+						return resolve(results);
+					}
+					while (activeCount < concurrency && taskIndex < tasks.length) {
+						const current = taskIndex++;
+						const task = tasks[current];
+						activeCount++;
+						
+						task()
+						.then(res => { 
+							results[current] = res; 
+							completed++;
+							
+							// 진행률 업데이트 (10% 단위로)
+							const progress = Math.floor((completed / total) * 100);
+							if (progress !== this.processingProgress && progress % 10 === 0) {
+								this.processingProgress = progress;
+								console.log(`진행률: ${progress}% (${completed}/${total})`);
+							}
+						})
+						.catch(err => {
+							results[current] = null;
+							completed++;
+						})
+						.finally(() => {
+							activeCount--;
+							next();
+						});
+					}
+				};
+				next();
+			});
+		},
+
+		// 2) 최적화된 HEAD 요청
+		async fetchLastModifiedOptimized(url) {
+			if (!url) return null;
+			// return null;
+			
+			// 캐시 확인
+			if (this.urlCache.has(url)) {
+				return this.urlCache.get(url);
+			}
+
+			try {
+				const controller = new AbortController();
+				setTimeout(() => controller.abort(), 1000); // 1초 타임아웃
+
+				const res = await fetch(url, { 
+					method: 'HEAD',
+					signal: controller.signal,
+					cache: 'force-cache'
+				});
+				
+				if (!res.ok) {
+					this.urlCache.set(url, null);
+					return null;
+				}
+				
+				const lm = res.headers.get('Last-Modified');
+				const result = lm ? new Date(lm) : null;
+				
+				// 캐시에 저장
+				this.urlCache.set(url, result);
+				return result;
+				
+			} catch (error) {
+				this.urlCache.set(url, null);
+				return null;
+			}
+		},
+
+		// 3) 메인 엑셀 로딩 함수
+		async loadExcelWithLastModified() {
+			this.loading(true);
+			this.processingProgress = 0;
+			
+			try {
+
+				this.EXCEL_JSON_HEADER = [];
+				this.EXCEL_JSON_DATA = [];
+				this.ORIGINAL_EXCEL_JSON_HEADER = null;
+
+
+				await this.read__channels();
+
+
+				this.ia_tabs = this.selectedChannel.ia_tabs;
+				
+				const iafile = this.getIaxlsxPath();
+				const url = this.domain + iafile;
+				const arrayBuffer = await (await fetch(url)).arrayBuffer();
+
+				console.log('엑셀 파싱 시작...');
+				
+				// XLSX 파싱 최적화
+				const workbook = XLSX.read(arrayBuffer, {
+					cellStyles: false,
+					cellFormulas: false,
+					sheetStubs: false,
+					bookSST: false
+				});
+				
+				// 전역 URL 수집 및 시트 데이터 저장
+				const globalUrlSet = new Set();
+				const allSheetData = [];
+				
+				for (const sheetName of workbook.SheetNames) {
+					const ws = workbook.Sheets[sheetName];
+					const rows = XLSX.utils.sheet_to_json(ws, { 
+						defval: null,
+						raw: false,
+						blankrows: false
+					});
+
+					allSheetData.push({ sheetName, rows });
+					this.EXCEL_JSON_HEADER.push(sheetName);
+					
+					// URL 수집
+					rows.forEach(row => {
+						const fileUrl = this.buildFileUrl(row);
+						if (fileUrl) globalUrlSet.add(fileUrl);
+					});
+				}
+
+				// 원본 헤더 백업
+				if (!this.ORIGINAL_EXCEL_JSON_HEADER) {
+					this.ORIGINAL_EXCEL_JSON_HEADER = [...this.EXCEL_JSON_HEADER];
+				}
+
+				const uniqueUrls = Array.from(globalUrlSet);
+				console.log(`고동시성으로 ${uniqueUrls.length}개 URL 처리 시작...`);
+
+				// 고동시성으로 처리
+				const urlTasks = uniqueUrls.map(url => () => this.fetchLastModifiedOptimized(url));
+				
+				const startTime = Date.now();
+				const lastModResults = await this.runWithHighConcurrency(urlTasks, 80);
+				const endTime = Date.now();
+				
+				console.log(`HTTP 요청 완료: ${endTime - startTime}ms`);
+
+				// 결과 매핑
+				const globalUrlToResult = new Map();
+				uniqueUrls.forEach((url, index) => {
+					globalUrlToResult.set(url, lastModResults[index]);
+				});
+
+				// 각 시트 데이터 구성
+				this.EXCEL_JSON_DATA = [];
+				for (const { sheetName, rows } of allSheetData) {
+					const rowsWithDate = rows.map(row => ({
+						...row,
+						lastModified: globalUrlToResult.get(this.buildFileUrl(row))
+					}));
+
+					this.EXCEL_JSON_DATA.push(rowsWithDate);
+				}
+
+				this.searched_data = JSON.parse(JSON.stringify(this.EXCEL_JSON_DATA));
+				this.iaDownloadUrl = url;
+				
+				console.log('전체 처리 완료!');
+				this.processingProgress = 100;
+
+				// 지연 로딩 초기화
+				this.$nextTick(() => {
+					this.preloadInitialGroups(3); // 첫 3개 그룹 미리 로드
+					this.initLazyLoading();
+				});
+				
+			} catch (e) {
+				console.error('엑셀 처리 중 오류:', e);
+			} finally {
+				// setTimeout( () => {
+					this.loading(false);
+				// }, 4000);
+			}
+		},
+
+		// 4) URL 생성 헬퍼
+		buildFileUrl(row) {
+			const path = row['경로'] || '';
+			const file = row['파일명'] || '';
+			return path && file ? path + file : null;
+		},
+
+		// 5) 엑셀 경로 생성
+		getIaxlsxPath() {
+			let iafile = this.selectedChannel.doc_base +
+						'/iaxlsx/ia_' + this.selectedChannel.code + '.xlsx';
+
+			let custom = this.ia_tabs[this.tabIndex].ia_file;
+
+			// 스마트 신규만 적용
+			if (this.pageChannel == 'SH_PA' && this.listVersion == 'tobe') {
+				custom = this.selectedChannel.doc_base + '/iaxlsx/ia_smart_new.xlsx';
+			}
+
+			return custom && custom.trim() !== '' ? custom : null;
+		},
+
+		clearUrlCache() {
+			if (this.urlCache && typeof this.urlCache.clear === 'function') {
+				this.urlCache.clear();
+			}
+		},
+		matchType: function (type, matchStr) {
+			var rtn = false;
+			
+			if (type != undefined && type != null){
+				var typeArr = type.split('-');
+				
+				if (type.length > 0) {
+					var matchedTxt = type.find((item) => item == matchStr);
+					
+					if (matchedTxt != undefined && matchedTxt == matchStr) rtn = true;
+				}
+			}
+			
+			return rtn;
+		},
+		makeLink: function (path, filename) {
+			if (path !== null && path != undefined && path != '') {
+				path =  path.trim();
+				filename = filename && filename.trim();
+				
+				if (path.charAt(path.length - 1) == '/') path = path.substr(0, path.length-1); 
+				
+				var pathTmp = path.substr(1);
+				var pathArr = pathTmp.split('/');
+				
+				path = pathArr.filter(item => {
+					if (item == this.selectedChannel.doc_base.substr(1)) {
+						return false;
+					}
+					else {
+						return true;
+					}
+				}).join('/');
+				
+				if (path.charAt(0) != '/') path = '/'+path;
+				
+				if (filename != undefined && filename != '') {
+					if (filename.substr(-5) != '.html') {
+						filename = filename + '.html';
+					}
+				}
+				
+				return this.selectedChannel.doc_base + path + '/' + filename;
+			}
+			
+			else {
+				return '';
+			}
+		},
+		
+		// 날짜 차이 계산
+		getDaysDifference(date1, date2) {
+			const d1 = new Date(date1);
+			const d2 = new Date(date2);
+			return Math.floor((d1 - d2) / (1000 * 60 * 60 * 24));
+		},
+
+		// 날짜 필터링 (초기화 후 실행)
+		filterByDate(months) {
+			// 1. 먼저 초기화
+			this.resetToOriginal();
+			
+			// 2. 필터링 실행
+			this.searched_data = [];
+			const today = new Date();
+			const cutoffDate = new Date();
+			cutoffDate.setMonth(cutoffDate.getMonth() - months);
+
+			this.EXCEL_JSON_DATA.forEach(sheetData => {
+				const filteredData = sheetData.filter(row => {
+					if (!row.lastModified) return false;
+					
+					const lastModified = new Date(row.lastModified);
+					if (isNaN(lastModified.getTime())) return false;
+					
+					return lastModified >= cutoffDate;
+				});
+				this.searched_data.push(filteredData);
+			});
+			
+			console.log(`${months}개월 이내 수정된 파일: ${this.getFilteredCount()}개`);
+
+			// 필터링 후 지연 로딩 재설정
+			this.resetLazyLoading();
+		},
+
+		// 7-1) 최근 N주일 내 수정된 파일 조회
+		filterByLastWeek(week = 1) {
+			this.resetToOriginal();
+			this.searched_data = [];
+			const today = new Date();
+			const weekAgo = new Date();
+			
+			const weekNo = week ? week * 7 : 7;
+			weekAgo.setDate(weekAgo.getDate() - weekNo); // N주일 전
+
+			this.EXCEL_JSON_DATA.forEach(sheetData => {
+				const filteredData = sheetData.filter(row => {
+					if (!row.lastModified) return false;
+					const lastModified = new Date(row.lastModified);
+					if (isNaN(lastModified.getTime())) return false;
+					return lastModified >= weekAgo;
+				});
+				this.searched_data.push(filteredData);
+			});
+			
+			console.log(`최근 ${week}주일 내 수정된 파일: ${this.getFilteredCount()}개`);
+
+			// 필터링 후 지연 로딩 재설정
+			this.resetLazyLoading();
+		},
+
+		// 날짜 순 정렬 (초기화 후 실행)
+		sortByDate() {
+			// 1. 먼저 초기화
+			this.resetToOriginal();
+			
+			// 2. 각 시트 내부 데이터를 최신순으로 정렬
+			const sortedData = this.EXCEL_JSON_DATA.map(sheetData => {
+				return [...sheetData].sort((a, b) => {
+					if (!a.lastModified && !b.lastModified) return 0;
+					if (!a.lastModified) return 1;
+					if (!b.lastModified) return -1;
+					
+					const dateA = new Date(a.lastModified);
+					const dateB = new Date(b.lastModified);
+					
+					if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0;
+					if (isNaN(dateA.getTime())) return 1;
+					if (isNaN(dateB.getTime())) return -1;
+					
+					return dateB - dateA; // 최신순
+				});
+			});
+
+			// 3. 각 시트별로 가장 최신 파일의 날짜 찾기
+			const sheetLatestDates = sortedData.map((sheetData, index) => {
+				let latestDate = null;
+				
+				for (const row of sheetData) {
+					if (row.lastModified) {
+						const date = new Date(row.lastModified);
+						if (!isNaN(date.getTime())) {
+							latestDate = date;
+							break;
+						}
+					}
+				}
+				
+				return {
+					index: index,
+					header: this.ORIGINAL_EXCEL_JSON_HEADER[index],
+					data: sheetData,
+					latestDate: latestDate
+				};
+			});
+
+			// 4. 시트들을 가장 최신 파일 기준으로 정렬
+			sheetLatestDates.sort((a, b) => {
+				if (!a.latestDate && !b.latestDate) return 0;
+				if (!a.latestDate) return 1;
+				if (!b.latestDate) return -1;
+				
+				return b.latestDate - a.latestDate; // 최신순
+			});
+
+			// 5. 정렬된 순서로 헤더와 데이터 재배치
+			this.EXCEL_JSON_HEADER = sheetLatestDates.map(item => item.header);
+			this.searched_data = sheetLatestDates.map(item => item.data);
+
+			console.log('카테고리별 최신 수정일 순으로 정렬 완료');
+
+			// 필터링 후 지연 로딩 재설정
+			this.resetLazyLoading();
+		},
+
+		// 원본 상태로 초기화하는 헬퍼 함수
+		resetToOriginal() {
+			if (this.ORIGINAL_EXCEL_JSON_HEADER) {
+				this.EXCEL_JSON_HEADER = [...this.ORIGINAL_EXCEL_JSON_HEADER];
+			}
+			this.searched_data = JSON.parse(JSON.stringify(this.EXCEL_JSON_DATA));
+		},
+
+		// 초기화 (기존 함수)
+		resetData() {
+			this.resetToOriginal();
+			console.log('데이터 및 카테고리 순서 초기화 완료');
+
+			// 필터링 후 지연 로딩 재설정
+			this.resetLazyLoading();
+		},
+
+		// 새로 추가된 유틸리티 함수들
+		getFilteredCount() {
+			return this.searched_data.reduce((count, sheetData) => count + sheetData.length, 0);
+		},
+
+		getDateStatistics() {
+			const stats = {
+				total: 0,
+				withDate: 0,
+				withoutDate: 0,
+				lastWeek: 0,
+				lastMonth: 0,
+				lastYear: 0
+			};
+
+			const now = new Date();
+			const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+			const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+			const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+
+			this.EXCEL_JSON_DATA.forEach(sheetData => {
+				sheetData.forEach(row => {
+					stats.total++;
+					
+					if (row.lastModified) {
+						const modDate = new Date(row.lastModified);
+						if (!isNaN(modDate.getTime())) {
+							stats.withDate++;
+							if (modDate >= weekAgo) stats.lastWeek++;
+							if (modDate >= monthAgo) stats.lastMonth++;
+							if (modDate >= yearAgo) stats.lastYear++;
+						} else {
+							stats.withoutDate++;
+						}
+					} else {
+						stats.withoutDate++;
+					}
+				});
+			});
+
+			return stats;
+		},
+
+		// 모바일 html 미리보기 팝업 열기
+		openHtml: function (e) {
+			var path = $(e.target).attr('href');
+			let domain = this.domain;
+			let isInbank = false;
+			
+			if (path.startsWith('/inbank')) {
+				isInbank = true;
+				// domain 에서 포트를 7002 로 변경
+				domain = domain.replace(':7001', ':7002');
+				path = path.replace('/inbank', '');
+			}
+
+			var pathname = domain+path;
+			
+			if (e.shiftKey || this.isMobile) {
+				window.open(pathname + '?' + Date.now());
+				e.preventDefault();
+			}
+			else {
+				if (!isInbank) {
+					$('#html-view-area').attr('src', pathname + '?' + Date.now());
+					setTimeout(function () {
+						$('#html-view-area').show();
+					}, 50);
+					
+					this.htmlShow = true;
+					this.resizing = false;
+				} else {
+					window.open(pathname + '?' + Date.now());
+					e.preventDefault();
+				}
+			}
+		},
+		// 모바일 html 미리보기 팝업 딤드영역 클릭으로 닫기
+		closeHtmlFromDim: function (e) {
+			if (e.target.getAttribute('class') == 'modal_layer_pop' && !this.resizing) {
+				this.htmlShow = false;
+			}
+		},
+		iaPath: function (parent) {
+			var path = this.makePath(parent);
+			
+			return path.reverse().join('/');
+		},
+		makePath: function (parent, path=[]) {
+			this.searchList.forEach(ia => {
+				
+				if (ia.id != parent) return;
+				
+				if (ia.id == parent) {
+					path.push(ia.text);
+					
+					this.makePath(ia.parent, path);
+				}
+			});
+			
+			return path; //newPath;
+		},
+		accordion: function (e, index) {
+			// this.changeProperties = true;
+			// 아코디언 클릭 시 해당 그룹을 강제 로드
+			this.forceLoadGroup(index);
+
+			var isOpen = e.target.getAttribute('aria-expanded');
+		
+			if (index !== undefined && this.refsArray[index]) {
+				this.refsArray[index].toggle(index);
+			}
+
+			// if (isOpen == 'true') {
+			// 	e.target.setAttribute('aria-expanded', false);
+			// } else {
+			// 	e.target.setAttribute('aria-expanded', true);
+			// }
+
+			// clearTimeout(this.changePropertiesTimer);
+			// this.changePropertiesTimer = setTimeout(() => this.changeProperties = false, 150);
+		},
+		searchHandler: function () {
+			var app = this;
+			
+			if (this.searchText.replace(/\s/g, '') == '') {
+				this.searched_data = this.EXCEL_JSON_DATA;
+			}
+			else {
+				this.searched_data = [];
+				
+				this.EXCEL_JSON_DATA.forEach(item => {
+					var tmpArr = item.filter(filteredItem => {
+						return (
+							filteredItem['1depth'] && filteredItem['1depth'].indexOf(this.searchText) != -1 || 
+							filteredItem['2depth'] && filteredItem['2depth'].indexOf(this.searchText) != -1 || 
+							filteredItem['3depth'] && filteredItem['3depth'].indexOf(this.searchText) != -1 || 
+							filteredItem['4depth'] && filteredItem['4depth'].indexOf(this.searchText) != -1 || 
+							filteredItem['화면명'] && filteredItem['화면명'].indexOf(this.searchText) != -1 || 
+							filteredItem['파일명'] && filteredItem['파일명'].indexOf(this.searchText) != -1);
+					});
+					
+					this.searched_data.push(tmpArr);
+				}); //end. forEach
+			}
+
+			// 검색 후 지연 로딩 재설정
+			this.resetLazyLoading();
+			
+			// 검색 결과가 있는 그룹들을 즉시 로드 (검색 결과를 바로 보여주기 위해)
+			if (this.searchText.trim() !== '') {
+				setTimeout(() => {
+					this.forceLoadAllGroups();
+				}, 200);
+			}
+		},
+		// 탑으로 이동
+		goTop: function () {
+			window.scrollTo({
+			  top: 100,
+			  behavior: "smooth",
+			});
+		},
+		siteMapChange: async function (tabIndex) {
+			this.tabIndex = tabIndex;
+			
+			try {
+				var iafile = this.selectedChannel.doc_base + '/iaxlsx/ia_'+this.selectedChannel.code+'.xlsx';
+				
+				if (this.ia_tabs[tabIndex].ia_file != '') {
+					iafile = this.ia_tabs[tabIndex].ia_file;
+				}
+				
+				const url = this.domain+iafile;
+				const workbook = XLSX.read(await (await fetch(url)).arrayBuffer());
+				
+				this.EXCEL_JSON_HEADER = [];
+				this.EXCEL_JSON_DATA = [];
+			  	//엑셀파일의 시트 정보를 읽어서 JSON 형태로 변환한다.
+				workbook.SheetNames.forEach((item, index, array) => {
+		   	  		this.EXCEL_JSON_HEADER.push(workbook.SheetNames[index]);
+				 	this.EXCEL_JSON_DATA.push(XLSX.utils.sheet_to_json(workbook.Sheets[item]));
+			  	});//end. forEach
+				
+			  	this.searched_data = this.EXCEL_JSON_DATA;
+			  	this.iaDownloadUrl = url;
+			}
+			catch(error) {
+				console.log(error)
+			}
+		}, //end siteMapChange
+		// html-list-componet 의 ref 저장 메서드
+		setRefs(el, index) {
+			if (el) {
+				this.refsArray[index] = el;
+			}
+		},
+		// Intersection Observer 초기화 및 .data-box 관찰 시작
+		initDataBoxObserver() {
+			// Observer 옵션 설정
+			const options = {
+				root: null,           // 뷰포트를 기준으로
+				rootMargin: '0px',    // 마진 없음
+				threshold: 0.1        // 10% 보이면 트리거
+			};
+
+			// Observer 콜백 함수
+			const callback = (entries) => {
+				console.log(entries)
+				entries.forEach(entry => {
+					if (entry.target.classList.contains('menu_wrap')) {
+						// data-box가 보이면 isVisible = true, 안보이면 false
+						setTimeout(() => {
+							this.compoVisible = entry.isIntersecting;
+						}, 150)
+					}
+				});
+			};
+
+			// Observer 생성
+			this.observer = new IntersectionObserver(callback, options);
+			
+			// .data-box 요소들 관찰 시작
+			this.observeDataBoxes();
+		},
+		// .data-box 요소들을 찾아서 Observer에 등록
+		observeDataBoxes() {
+			console.log('observer')
+			this.$nextTick(() => {
+				const dataBoxes = document.querySelectorAll('.menu_wrap');
+				dataBoxes.forEach(box => {
+					console.log(box)
+					this.observer.observe(box);
+				});
+			});
+		},
+		 // Observer 정리
+		destroyObserver() {
+			if (this.observer) {
+				this.observer.disconnect();
+				this.observer = null;
+			}
+		},
+		// 전체 보이는 그룹 수 계산
+		getTotalVisibleGroups() {
+			return this.searched_data.filter(data => data.length > 0).length;
+		},
+		
+		// 브라우저 검색용 모든 그룹 로드
+		loadAllForBrowserSearch() {
+			console.log('브라우저 검색을 위해 모든 그룹 로드 시작...');
+			
+			this.forceLoadAllGroups();
+			this.allGroupsForceLoaded = true;
+			
+			this.$nextTick(() => {
+				setTimeout(() => {
+					const stats = this.getLazyLoadingStats();
+					console.log(`모든 그룹 로드 완료: ${stats.loaded}/${stats.total}`);
+					
+					// 사용자에게 안내
+					alert('모든 그룹이 로드되었습니다. 이제 Ctrl+F로 전체 검색이 가능합니다.');
+				}, 1000);
+			});
+		},
+		
+		// Ctrl+F 자동 감지 및 처리
+		handleKeyboardSearch(event) {
+			if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+				if (!this.isAllGroupsLoaded) {
+					console.log('Ctrl+F 감지 - 자동으로 모든 그룹 로드');
+					
+					// 사용자에게 잠시 기다리라고 알림
+					const notification = this.showSearchLoadingNotification();
+					
+					this.forceLoadAllGroups();
+					this.allGroupsForceLoaded = true;
+					
+					this.$nextTick(() => {
+						setTimeout(() => {
+							this.hideSearchLoadingNotification(notification);
+							console.log('로딩 완료 - Ctrl+F 검색 가능');
+						}, 800);
+					});
+				}
+			}
+		},
+		
+		// 검색 로딩 알림 표시
+		showSearchLoadingNotification() {
+			const notification = document.createElement('div');
+			notification.className = 'search-loading-notification';
+			notification.innerHTML = `
+				<div class="notification-content">
+					<div class="loading-spinner"></div>
+					<span>전체 검색을 위해 데이터를 로드하는 중...</span>
+				</div>
+			`;
+			
+			// 스타일 적용
+			Object.assign(notification.style, {
+				position: 'fixed',
+				top: '20px',
+				right: '20px',
+				background: '#007bff',
+				color: 'white',
+				padding: '12px 20px',
+				borderRadius: '6px',
+				zIndex: '10000',
+				boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+				fontSize: '14px'
+			});
+			
+			document.body.appendChild(notification);
+			return notification;
+		},
+		
+		// 검색 로딩 알림 숨기기
+		hideSearchLoadingNotification(notification) {
+			if (notification && notification.parentNode) {
+				notification.style.opacity = '0';
+				notification.style.transition = 'opacity 0.3s';
+				setTimeout(() => {
+					notification.parentNode.removeChild(notification);
+				}, 300);
+			}
+		},
+		
+		// 데이터 재설정 시 강제 로드 상태도 리셋
+		resetLazyLoading() {
+			this.destroyLazyLoading();
+			this.allGroupsForceLoaded = false;
+			
+			this.$nextTick(() => {
+				setTimeout(() => {
+					this.initLazyLoading();
+				}, 100);
+			});
+		}
+	},
+	// 컴포넌트 해제 시 캐시 정리
+	beforeUnmount() {
+		// 직접 체크하여 에러 방지
+		this.clearUrlCache();
+		// 컴포넌트 언마운트 시 Observer 정리
+		this.destroyObserver();
+
+		// 지연 로딩 정리 추가
+		this.destroyLazyLoading();
+		
+		// 키보드 이벤트 리스너 제거
+		document.removeEventListener('keydown', this.handleKeyboardSearch);
+		console.log('지연 로딩 정리 완료');
+	}
+};
+
+// .component('header-component', HeaderComponent)
+// .use(pinia)
+// .mount('#v-app');
+
+</script>
+<style scoped>
+.input_section {
+	border-bottom: 0;
+}
+.input_area.search_case button {
+	top: 50%;
+    transform: translateY(-50%);
+	right: 20px;
+}
+.input_area.search_case input {
+	width: 93%;
+    border: 2px solid #e55318;
+    height: 50px;
+}
+.input_area.search_case label {
+	line-height: 50px;
+}
+
+/* dl, dt, dd 스타일 */
+.horizontal-dl {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.horizontal-dl dt {
+	margin: 0;
+}
+
+.button-group {
+	display: flex;
+	gap: 6px;
+}
+
+.round-button {
+	background-color: #f0f0f0;
+	border: 1px solid #d0d0d0;
+	border-radius: 6px;
+	padding: 6px 12px;
+	font-size: 14px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.round-button:hover {
+	background-color: #e0e0e0;
+}
+.progress-container {
+	position: relative;
+	z-index: 10000;
+}
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: #f0f0f0;
+  border-radius: 2px;
+  position: relative;
+}
+.progress-text {
+	text-align: center;
+	color: #fff;
+	font-weight: bold;
+}
+.progress-fill {
+  height: 100%;
+  background: #4CAF50;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+.input_wrap {
+	max-width: 700px;
+}
+.list-version {
+    /* border-bottom: 4px solid #535353; */
+    padding-bottom: 15px;
+	position: relative;
+    width: 50%;
+}
+.list-version::after {
+    content: '▼';
+    position: absolute;
+    left: 220px;
+    font-size: 29px;
+	pointer-events: none;
+	touch-action: none;
+	z-index: 2;
+}
+.list-version select {
+	font-size: 28px;
+    color: #333;
+    font-family: 'S-CoreDream-5Medium';
+	border: 0;
+	width: 250px;
+}
+
+/* 지연로딩 스타일 */
+/* 지연 로딩 플레이스홀더 스타일 */
+.lazy-placeholder {
+	min-height: 120px;
+	background: #f8f9fa;
+	border: 1px dashed #dee2e6;
+	border-radius: 4px;
+	margin: 10px 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.3s ease;
+}
+
+.lazy-placeholder:hover {
+	background: #e9ecef;
+	border-color: #adb5bd;
+}
+
+.placeholder-content {
+	text-align: center;
+	color: #6c757d;
+}
+
+.placeholder-text {
+	font-size: 14px;
+	margin-bottom: 10px;
+}
+
+/* 로딩 점들 애니메이션 */
+.loader-dots {
+	display: flex;
+	gap: 4px;
+	justify-content: center;
+}
+
+.loader-dots span {
+	width: 8px;
+	height: 8px;
+	background: #007bff;
+	border-radius: 50%;
+	display: inline-block;
+	animation: dotPulse 1.4s ease-in-out infinite both;
+}
+
+.loader-dots span:nth-child(1) { animation-delay: -0.32s; }
+.loader-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes dotPulse {
+	0%, 80%, 100% { 
+		transform: scale(0.8);
+		opacity: 0.5;
+	}
+	40% { 
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+/* 그룹 아이템 수 표시 */
+.group-item-count {
+	font-size: 12px;
+	color: #6c757d;
+	font-weight: normal;
+	margin-left: 8px;
+}
+
+/* 로드된 그룹 페이드인 효과 */
+.menu_wrap {
+	transition: opacity 0.3s ease;
+}
+
+/* 모바일에서 플레이스홀더 높이 조정 */
+@media (max-width: 768px) {
+	.lazy-placeholder {
+		min-height: 80px;
+	}
+	
+	.placeholder-text {
+		font-size: 12px;
+	}
+}
+</style>

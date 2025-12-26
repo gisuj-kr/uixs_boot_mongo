@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+	<meta name="format-detection" content="telephone=no">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<title>수협은행</title>
+	<link rel="stylesheet" href="./css/reset.css">
+	<link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/common.css">
+	<!-- <script src="https://unpkg.com/@plant/plant@2.4.0/dist/plant.js"></script> -->
+	<script type="text/javascript" src="./js/jquery-1.12.4.js"></script>
+</head>
+<style>
+    
+</style>
+<body >
+    <div class="g_wrapper" >
+        <div class="g_header">
+            <div class="inner">
+                <h1><img src="./img/ui/img_logo.png"></h1>
+                <ul>
+                    <li><a href="guide01_01.html">Foundation</a></li>
+                    <li><a href="guide02_01.html" class="on">Components</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="g_container">
+            <div class="g_left">
+                <ul>
+                    <li class="tit">Foundation</li>
+                    <li><a href="guide02_01.html" class="on">Button</a></li>
+                    <li><a href="guide02_02.html">Bottom Sheet</a></li>
+                    <li><a href="guide02_03.html">Dropdown</a></li>
+                    <li><a href="guide02_04.html">List</a></li>
+                    <li><a>Search</a></li>
+                    <li><a>Selection Controls</a></li>
+                    <li><a >Tab</a></li>
+                    <li><a>Text Field</a></li>
+                </ul>
+            </div>
+            <div class="g_content">
+                <h2>Button</h2>
+                <dl class="sub_txt">
+                    <dt>Definition</dt>
+                    <dd>Button은 사용자로 하여금 한번의 탭으로 액션을 실행하거나 선택하도록 한다.</dd>
+                </dl>
+                <div class="img_txt" style="padding: 20px; margin-top: 20px;">
+                    <ol>
+                        <li><span>1</span>Button은 사용성을 고려하여 최소한의 사이즈, 여백, 간격을 준수해야 한다.</li>
+                        <li><span>2</span>사용자가 다른 화면 요소들 사이에서 Button을 쉽게 발견할 수 있는 형태로 설계해야 한다.</li>
+                        <li><span>3</span>각 Button의 강조 및 위계 정도를 나타내기 위해 Button의 형태, 색상, 레이블 텍스트 등을 고려하여 설계해야 한다.</li>
+                        <li><span>4</span>Button은 화면 내에서 사용자가 취할 액션을 예상할 수 있도록 명확한 레이블을 제공해야 한다.</li>
+                        <li><span>5</span>프로세스 내에서 사용자가 테스크를 빠르게 수행할 수 있도록 동일한 위치와 스타일을 가진 Primary Button으로 제공해야 한다.</li>
+                        <li><span>6</span>사용자의 액션에 따른 피드백을 명확히 제공해야 한다.</li>
+                    </ol>
+                </div>
+                <dl class="sub_txt" style="margin-top: 70px">
+                    <dt>Anatomy</dt>
+                    <dd>
+                        <div class="just_txt">
+                            <img src="./img/ui/img_02_01.png">
+                            <ol>
+                                <li><span>1</span><strong>Button Text</strong><p>해당 Button의 기능을 표시한다.<br>Button의 타입에 따라 아이콘을 함께 사용할 수 있다.</p></li>
+                                <li><span>2</span><strong>Container <em>(Optional)</em></strong><p>사용자가 다른 화면 요소들 사이에서 Button을 쉽게 발견할 수 있는 형태로 설계해야 한다.</p></li>
+                            </ol>
+                        </div>
+                    </dd>
+                </dl>
+                
+                <dl class="sub_txt" style="margin-top: 70px">
+                    <dt>Types</dt>
+                    <dd>
+                        <div class="just_txt">
+                            <div class="g_txt">
+                                <p><strong>Main Contained Button</strong>콘텐츠 내 하단 액션버튼으로 사용</p>
+                                <img src="./img/ui/img_02_02.png">
+                            </div>
+                            <div class="g_txt">
+                                <p><strong>Main Contained Button [Button이 2개인경우]</strong>4:6 비율로 정렬</p>
+                                <img src="./img/ui/img_02_03.png">
+                            </div>
+                            <div class="g_txt">
+                                <p><strong>Main Contained Button [텍스트버튼을 추가한경우]</strong>상하로 정렬</p>
+                                <img src="./img/ui/img_02_04.png">
+                            </div>
+                        </div>
+                    </dd>
+                </dl>
+                <dl class="sub_txt" style="margin-top: 70px">
+                    <dt style="display: none;">Types</dt>
+                    <dd>
+                        <div class="just_txt">
+                            <div class="g_txt">
+                                <p><strong>Contained Button</strong>콘텐츠 내 서브 버튼으로 사용</p>
+                                <img src="./img/ui/img_02_05.png">
+                            </div>
+                            <div class="g_txt">
+                                <p><strong>Contained Button & Icon Button</strong>input박스 내에 버튼으로 사용</p>
+                                <img src="./img/ui/img_02_06.png">
+                            </div>
+                            <div class="g_txt">
+                                <p><strong>Icon Button</strong>콘텐츠 내 배너타입 버튼용으로 사용</p>
+                                <img src="./img/ui/img_02_07.png">
+                            </div>
+                        </div>
+                    </dd>
+                </dl>
+            </div>
+            
+        </div>
+    </div>
+</body>
+</html>

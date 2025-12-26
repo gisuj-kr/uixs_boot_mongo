@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // Spring Boot 애플리케이션 실행 설정
+            "type": "java",
+            "name": "Spring Boot - UixsBootApplication",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.uixs.UixsBootApplication",
+            "projectName": "uixs_boot_mongo",
+            "args": "",
+            // 환경변수 파일 (필요시 .env 파일 생성)
+            "envFile": "${workspaceFolder}/.env",
+            // JVM 옵션 (메모리 설정 등)
+            "vmArgs": "-Dspring.profiles.active=default"
+        },
+        {
+            // Spring Boot 디버그 모드 실행
+            "type": "java",
+            "name": "Spring Boot - Debug Mode",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.uixs.UixsBootApplication",
+            "projectName": "uixs_boot_mongo",
+            "args": "",
+            "vmArgs": "-Dspring.profiles.active=default -Xdebug",
+            "console": "integratedTerminal"
+        }
+    ]
+}
