@@ -298,7 +298,7 @@ public class WorkDAOImp implements WorkDAO {
 	
 	
 	/**
-	 * 요청작업 수정
+	 * 요청작업 수정 (요청 작업 전체 수정)
 	 */
 	@Override
 	public int modifyRequest(WorkDTO work) {
