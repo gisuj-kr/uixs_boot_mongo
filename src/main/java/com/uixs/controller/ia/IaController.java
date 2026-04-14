@@ -40,30 +40,30 @@ public class IaController {
 	@Autowired
 	private FileUpload fileUpload;
 	
-	@RequestMapping(value = {"/ia/list.do"})
-	public String listView(Model model) {
-		HttpServletRequest request =((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest();
-		String rootPath = request.getSession().getServletContext().getRealPath("/");
-		
-		model.addAttribute("rpath", rootPath);
-		
-		return "/ia/ia0100";
-	}
+//	@RequestMapping(value = {"/ia/list.do"})
+//	public String listView(Model model) {
+//		HttpServletRequest request =((ServletRequestAttributes)RequestContextHolder.getRequestAttributes()).getRequest();
+//		String rootPath = request.getSession().getServletContext().getRealPath("/");
+//		
+//		model.addAttribute("rpath", rootPath);
+//		
+//		return "/ia/ia0100";
+//	}
 	
-	@RequestMapping(value = {"/ia/manage"})
-	public String manage() {
-		return "menu/menu0200";
-	}
+//	@RequestMapping(value = {"/ia/manage"})
+//	public String manage() {
+//		return "menu/menu0200";
+//	}
 	
-	@RequestMapping(value = {"/ia/cal"})
-	public String publist() {
-		return "menu/menu0100";
-	}
+//	@RequestMapping(value = {"/ia/cal"})
+//	public String publist() {
+//		return "menu/menu0100";
+//	}
 	
-	@RequestMapping(value = {"/ia/html_list.do"})
-	public String htmlListV() {
-		return "ia/ia0200";
-	}
+//	@RequestMapping(value = {"/ia/html_list.do"})
+//	public String htmlListV() {
+//		return "ia/ia0200";
+//	}
 	
 	@RequestMapping(value = {"/ia/list.dat"}, method=RequestMethod.GET)
 	@ResponseBody

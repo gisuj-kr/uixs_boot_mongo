@@ -353,6 +353,8 @@ export default {
 					design: '디자인',
 					publish: '퍼블'
 				};
+                const stName = { 'PENDING': '대기', 'WORKING': '작업중', 'CONFIRM_REQUEST': '컨펌요청', 'CONFIRM_COMPLETE': '컨펌완료' };
+                const dOrEmpty = (val) => val ? val : "";
 
 				let renew_data = [
 					[
@@ -371,62 +373,52 @@ export default {
 					]
 				];
 
-				data.forEach((item) => {
+			data.forEach((item) => {
+				item.part.forEach(part => {
 
-					let row = [];
+					// 날짜 문자열에서 'YYYYMM' 형식으로 연월을 추출하는 헬퍼 함수
+					const getNumYM = (dateStr) => {
+						if (!dateStr) return "";
+						const match = dateStr.match(/(\d{4})[.-](\d{2})/);
+						return match ? match[1] + match[2] : "";
+					};
 
-					row.push(item.site_name);
-					row.push(item.request_title);
-					row.push(item.requestor_name);
+					// workMonth는 335라인에서 이미 '04' 형태 문자열로 변환됨
+					// String으로 그대로 합쳐서 '202604' 형태의 비교 키 생성
+					const targetYM = String(workYear) + String(workMonth); // 예: '202604'
 
-					// 					item.part.sort()
-					let planPart = item.part.filter((part) => part.name == 'plan');
-					let designPart = item.part.filter((part) => part.name == 'design');
-					let publishPart = item.part.filter((part) => part.name == 'publish');
+					// [핵심 필터링 조건]
+					// 착수일(part_work_sday) 또는 실제 종료일(part_work_eday)이
+					// 선택한 월에 속하는 work_content 행만 엑셀에 포함합니다.
+					// work_content가 없는 항목(착수일/종료일 미입력)은 제외합니다.
+					if (part.work_content != null && part.work_content.length > 0) {
+						part.work_content.reverse().forEach((work) => {
+							const sYM = getNumYM(work.part_work_sday);
+							const eYM = getNumYM(work.part_work_eday);
 
-					item.part = [...planPart, ...designPart, ...publishPart];
-
-					item.part.forEach(part => {
-						let newRow = [
-							...row,
-							dateOrEmpty(part.part_work_rday), // 작업 요청일
-							dateOrEmpty(part.part_work_crday), // 완료 요청일
-							partToKr[part.name],
-							part.worker
-							// 							statePercent[part.state] + '%'
-						];
-
-						if (part.work_content != null && part.work_content.length > 0) {
-							part.work_content.reverse().forEach((work) => {
-								//if (work.part_work_sday != null) {
-								let rsRow = [
-									...newRow,
-									work.content,
-									dateOrEmpty(work.part_work_sday),
-									dateOrEmpty(work.part_work_eday),
-									statePercent[part.state] + '%',
-									part.bigo
-								];
-
-								renew_data.push(rsRow);
-								//}
-							});
-						}
-						else {
-							let rsRow = [
-								...newRow,
-								'',
-								'',
-								'',
-								statePercent[part.state] + '%',
-								part.bigo
-							];
-
-							renew_data.push(rsRow);
-						}
-					});
+							// 착수일 또는 실제 종료일 중 하나라도 선택 월과 일치하면 포함
+							if (sYM === targetYM || eYM === targetYM) {
+								renew_data.push([
+									item.site_name,
+									item.request_title,
+									item.requestor_name,
+									dOrEmpty(part.part_work_rday),
+									dOrEmpty(part.part_work_crday),
+									partToKr[part.name] || part.name,
+									part.worker || '지정안됨',
+									work.content || '',
+									dOrEmpty(work.part_work_sday),
+									dOrEmpty(work.part_work_eday),
+									(statePercent[part.state] || 0) + '%',
+									part.bigo || ''
+								]);
+							}
+						});
+					}
+					// work_content가 없는 항목은 착수일/종료일이 없으므로 엑셀에서 제외
 
 				});
+			});
 
 				// workbook 생성
 				const wb = XLSX.utils.book_new();

@@ -1,141 +1,140 @@
 package com.uixs.model.member.dao;
 
-import java.util.Collection;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import com.mongodb.client.result.InsertOneResult;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.uixs.model.member.dto.MemberDTO;
 
-@Repository
+@Repository("memberDao")
 public class MemberDAOImp implements MemberDAO {
-	
-	//mongodb 에 접속하여 명령어를 실행하는 객체
-	@Autowired
-	private MongoTemplate mongoTemplate;
-	
-	String COLLECTION_NAME="member"; //테이블 이름
-	
+
+    private static final Logger logger = LoggerFactory.getLogger(MemberDAOImp.class);
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    private ObjectMapper objectMapper;
+
+    public MemberDAOImp() {
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule()); // for LocalDateTime
+    }
+
+    private MemberDTO parseJson(String json) {
+        try {
+            return objectMapper.readValue(json, MemberDTO.class);
+        } catch (JsonProcessingException e) {
+            logger.error("Failed to parse JSON to MemberDTO", e);
+            return null;
+        }
+    }
+
+    private String toJson(MemberDTO dto) {
+        try {
+            return objectMapper.writeValueAsString(dto);
+        } catch (JsonProcessingException e) {
+            logger.error("Failed to write MemberDTO to JSON", e);
+            return "{}";
+        }
+    }
+
 	@Override
 	public MemberDTO loginCheck(String userid, String passwd) {
-		Query query = new Query(new Criteria("_id").is(userid).and("passwd").is(passwd));
-		
-		List<MemberDTO> list = mongoTemplate.find(query, MemberDTO.class);
-		
-		if(list.size() > 0) {
-			return list.get(0);
-		} else {
-			return null;
-		}
+        List<String> jsons = jdbcTemplate.queryForList(
+            "SELECT doc FROM member WHERE json_extract(doc, '$.userid') = ? AND json_extract(doc, '$.password') = ?", 
+            String.class, userid, passwd);
+        return jsons.isEmpty() ? null : parseJson(jsons.get(0));
 	}
 	
 	@Override
 	public MemberDTO memberSelectOne(String userid) {
-		new Criteria();
-		
-		Query query = new Query(Criteria.where("userid").is(userid));
-		
-		MemberDTO user = mongoTemplate.findOne(query, MemberDTO.class, COLLECTION_NAME);
-		
-		if(user != null) {
-			return user;
-		} else {
-			return null;
-		}
+        List<String> jsons = jdbcTemplate.queryForList(
+            "SELECT doc FROM member WHERE json_extract(doc, '$.userid') = ?", 
+            String.class, userid);
+        return jsons.isEmpty() ? null : parseJson(jsons.get(0));
 	}
 	
 	@Override
 	public List<MemberDTO> memberList(Long start, int limit) {
-		Query query = new Query(Criteria.where("userid").ne("admin"));
-		
-		query.with(Sort.by(Sort.Direction.DESC, "reg_date")).skip(start).limit(limit); 
-		
-		List<MemberDTO> list = mongoTemplate.find(query, MemberDTO.class);
-		
-		return list;
+        List<String> jsons = jdbcTemplate.queryForList(
+            "SELECT doc FROM member WHERE json_extract(doc, '$.userid') != 'admin' ORDER BY json_extract(doc, '$.reg_date') DESC LIMIT ? OFFSET ?", 
+            String.class, limit, start);
+        List<MemberDTO> list = new ArrayList<>();
+        for (String json : jsons) {
+            MemberDTO dto = parseJson(json);
+            if (dto != null) list.add(dto);
+        }
+        return list;
 	}
 	
 	@Override
 	public List<MemberDTO> memberWithPart(String part) {
-		Query query = new Query(Criteria.where("part").is(part));
-		
-		List<MemberDTO> list = mongoTemplate.find(query, MemberDTO.class);
-		
-		return list;
+        List<String> jsons = jdbcTemplate.queryForList(
+            "SELECT doc FROM member WHERE json_extract(doc, '$.part') = ?", 
+            String.class, part);
+        List<MemberDTO> list = new ArrayList<>();
+        for (String json : jsons) {
+            MemberDTO dto = parseJson(json);
+            if (dto != null) list.add(dto);
+        }
+        return list;
 	}
 	
 	@Override
 	public MemberDTO memberInsert(MemberDTO user) {
-		MemberDTO result = mongoTemplate.insert(user, COLLECTION_NAME);
-		
-		return result;
+        if (user.getId() == null || user.getId().isEmpty()) {
+            user.setId(UUID.randomUUID().toString().replace("-", ""));
+        }
+        jdbcTemplate.update("INSERT INTO member (id, doc) VALUES (?, ?)", user.getId(), toJson(user));
+        return user;
 	}
 	
-	/**
-	 * @param user MemberDTO
-	 * @param key _id 디비 고유아이디
-	 * @throws Exception
-	 */
 	@Override
 	public int memberUpdate(MemberDTO user) {
-		Criteria criteria = new Criteria("userid");
-		criteria.is(user.getUserid());
-		
-		Query query = new Query(criteria);
-		
-		Update update = new Update();
-		update.set("username", user.getUsername());
-		update.set("team", user.getTeam());
-		update.set("part", user.getPart());
-		update.set("tel", user.getTel());
-		update.set("email", user.getEmail());
-		update.set("auth", user.getAuth());
-		
-		if(user.getPassword() != null && !user.getPassword().isEmpty()) {
-			update.set("password", user.getPassword());
-		}
-		
-		return (int) mongoTemplate.updateFirst(query, update, COLLECTION_NAME).getModifiedCount();
+        MemberDTO existing = memberSelectOne(user.getUserid());
+        if (existing == null) return 0;
+        
+        if (user.getUsername() != null) existing.setUsername(user.getUsername());
+        if (user.getTeam() != null) existing.setTeam(user.getTeam());
+        if (user.getPart() != null) existing.setPart(user.getPart());
+        if (user.getTel() != null) existing.setTel(user.getTel());
+        if (user.getEmail() != null) existing.setEmail(user.getEmail());
+        if (user.getAuth() != null) existing.setAuth(user.getAuth());
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            existing.setPassword(user.getPassword());
+        }
+        
+        return jdbcTemplate.update("UPDATE member SET doc = ? WHERE id = ?", toJson(existing), existing.getId());
 	}
 	
 	@Override
 	public int memberDelete(String id) {
-		System.out.println(id+":: dao 에서 출력");
-		Criteria criteria = Criteria.where("_id").is(id);
-		
-		Query query = new Query(criteria);
-		
-		return (int) mongoTemplate.remove(query, COLLECTION_NAME).getDeletedCount();
+		return jdbcTemplate.update("DELETE FROM member WHERE id = ?", id);
 	}
 	
 	@Override
 	public int memberTotalCount() {
-		return mongoTemplate.findAll(MemberDTO.class, COLLECTION_NAME).size();
+        Integer count = jdbcTemplate.queryForObject("SELECT count(*) FROM member", Integer.class);
+        return count != null ? count : 0;
 	}
 	
-	/**
-	 * 사용자 전체 수
-	 * @return
-	 * @throws Exception
-	 */
 	@Override
 	public int selectTotUser() {
-		Query query = new Query(Criteria.where("{}"));
-		
-		return (int) mongoTemplate.count(query, MemberDTO.class, COLLECTION_NAME);
+        return memberTotalCount();
 	}
 	
 	@Override
 	public void join(MemberDTO dto) {
-		mongoTemplate.insert(dto, COLLECTION_NAME);
+		memberInsert(dto);
 	}
 }

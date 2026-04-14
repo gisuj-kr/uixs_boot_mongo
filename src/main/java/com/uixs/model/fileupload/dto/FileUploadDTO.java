@@ -1,8 +1,5 @@
 package com.uixs.model.fileupload.dto;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,10 +8,8 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-@Document(collection = "upload_files")
 public class FileUploadDTO {
 	
-	@Id
 	private String id;					// 게시물 고유 아이디 (mongoId와  아이디와 동일)
 	
 	private String mongoId;				// 몽고디비 아이디
@@ -25,6 +20,9 @@ public class FileUploadDTO {
 	private String upload_path;			// 파일 저장 경로
 	private long size;					// 파일 용량
 	
+	public FileUploadDTO() {
+	}
+
 	@Builder
 	public FileUploadDTO (
 			String ref_table, 

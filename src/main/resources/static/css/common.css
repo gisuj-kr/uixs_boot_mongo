@@ -1192,7 +1192,7 @@ table {width: 100%;table-layout: fixed;border-collapse:collapse; border-spacing:
 	background-color: rgba(0,0,0,.5)
 }
 #modal-set-work-state header {
-    padding-bottom: 20px;
+    /* padding-bottom: 20px; */
 }
 #modal-set-work-state  header h3 {
 	font-size: 16px;

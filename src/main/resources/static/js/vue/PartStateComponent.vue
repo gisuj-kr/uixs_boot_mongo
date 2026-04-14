@@ -1,22 +1,29 @@
 <template>
-<li 
-    :class="isNotWorking ? stateAttr.class : '' + ' part-state'" 
-    :data-state="state" 
-    :data-part="part.toUpperCase()">
-    <span class="part-title">{{partList[part]}}</span>
-    <div class="work_step_check" v-if="isNotWorking">
-        <button type="button" class="btn_small01" :id="detailData.request_id + part" @click.prevent="setWorkStatePopupOpen(part)">{{stateAttr.text}}</button>
-        <em class="sdate" v-if="worker">담당자: {{worker}}</em>
-        <em class="sdate" v-if="worker && thisPercent < 100">진행율: {{thisPercent}}%</em>
-        <em class="sdate" v-if="workProgDate && thisPercent < 100">{{workProgDate}}일째 작업중</em>
-        <em class="edate" v-if="thisPercent == 100">완료일: {{workCompleteDate}}</em>
+<div 
+    class="flex flex-col items-center p-4 rounded-xl transition-all cursor-pointer relative overflow-hidden bg-surface-container-lowest"
+    :class="cardClasses"
+    @click.prevent="isNotWorking ? setWorkStatePopupOpen(part) : confirmAddWorker()">
+    
+    <!-- 작업중 배경 효과 -->
+    <div v-if="isNotWorking && state == 'WORKING'" class="absolute inset-0 bg-primary/5"></div>
+    
+    <!-- 아이콘 영역 -->
+    <div class="relative z-10 w-12 h-12 flex items-center justify-center rounded-full mb-3" :class="iconContainerClasses">
+        <span class="material-symbols-outlined">{{partIcon}}</span>
+        <!-- 완료율 뱃지 -->
+        <div v-if="isNotWorking" 
+            class="absolute -bottom-1 -right-1 text-[8px] font-bold px-1.5 rounded-full border-2 border-white"
+            :class="badgeClasses">
+            {{thisPercent}}%
+        </div>
     </div>
-    <div class="work_step_check" v-else>
-        <button type="button" class="btn_small01">해당없음</button>
-        <button type="button" class="btn_add_need_worker" @click="addNeedWorker">추가+</button>
-    </div>
-</li>
+    
+    <!-- 텍스트 영역 -->
+    <span class="relative z-10 text-xs font-bold" :class="textTitleClasses">{{partList[part]}}</span>
+    <span class="relative z-10 text-[10px]" :class="textStatusClasses">{{isNotWorking ? stateAttr.text : '대기'}}</span>
+</div>
 </template>
+
 	
 <script>
 /** start: 진행중인작업 상세보기 팝업 - 요청작성 상태 컴포넌트 */
@@ -80,12 +87,14 @@ export default {
         if (this.detailData.part != null) { 
             const partLen = this.detailData.part.filter(part => part.name == this.part).length;
             
-            // 현재파트 상태 지정
+            // 현재파트 상태 지정 (상태 우선순위: COMPLETE > EDIT > CONFIRM > WORKING > PENDING)
             if (partLen > 0) {
+                const statePriority = { 'COMPLETE': 5, 'EDIT': 4, 'CONFIRM': 3, 'WORKING': 2, 'PENDING': 1 };
                 this.thisPartState = this.detailData.part
                                     .filter(part => part.name == this.part)
-                                    .sort()
-                                    .reverse()[0];
+                                    .sort((a, b) => {
+                                        return (statePriority[b.state] || 0) - (statePriority[a.state] || 0);
+                                    })[0];
             }
             else {
                 this.thisPartState = {state: 'PENDING', work_content: []};
@@ -113,6 +122,10 @@ export default {
             return this.detailData.need_workers.includes(this.part);
         },
         worker: function () {
+            const workers = this.detailData.part.filter(p => p.name == this.part).map(p => p.worker);
+            if (workers.length > 1) {
+                return workers[0] + ' 외 ' + (workers.length - 1) + '명';
+            }
             return this.thisPartState.worker;
         },
         // 작업 상태별 속성
@@ -141,17 +154,28 @@ export default {
             );
         },
         workCompleteDate: function () {
-            let rs = '';
+            let latestDate = null;
             
-            if (this.thisPartState.work_content.length > 0)  {
-                const work_content = this.thisPartState.work_content[this.thisPartState.work_content.length-1];
-                
-                if (work_content.part_work_eday != null) {
-                    rs = new Date(work_content.part_work_eday).format('yyyy.MM.dd');
+            // 해당 파트의 모든 담당자 데이터 수집
+            const allWorkersOfPart = this.detailData.part.filter(p => p.name == this.part);
+            
+            allWorkersOfPart.forEach(workerData => {
+                if (workerData.work_content && workerData.work_content.length > 0) {
+                    workerData.work_content.forEach(content => {
+                        if (content.part_work_eday) {
+                            // 문자열인 경우 Date 객체로 변환 시도
+                            const edate = new Date(content.part_work_eday);
+                            if (!isNaN(edate.getTime())) {
+                                if (!latestDate || edate > latestDate) {
+                                    latestDate = edate;
+                                }
+                            }
+                        }
+                    });
                 }
-            }
+            });
             
-            return rs;
+            return latestDate ? latestDate.format('yyyy.MM.dd') : '';
         },
         // 검수요청일자
         confirmRequestDate: function() {
@@ -186,8 +210,44 @@ export default {
             }
             
             return ret;
+        },
+        // 디자인 적용을 위한 추가 계산된 속성들
+        cardClasses: function() {
+            if (!this.isNotWorking) return 'border border-outline-variant/10 shadow-sm opacity-60';
+            if (this.state === 'COMPLETE') return 'border border-outline-variant/10 shadow-sm';
+            if (this.state === 'WORKING' || this.state === 'CONFIRM') return 'border-2 border-primary shadow-md';
+            return 'border border-outline-variant/10 shadow-sm';
+        },
+        iconContainerClasses: function() {
+            if (!this.isNotWorking) return 'bg-surface-variant text-on-surface-variant';
+            if (this.state === 'COMPLETE') return 'bg-secondary-container text-on-secondary-container';
+            if (this.state === 'WORKING' || this.state === 'CONFIRM') return 'bg-primary text-on-primary shadow-lg shadow-primary/20';
+            return 'bg-secondary-container text-on-secondary-container';
+        },
+        badgeClasses: function() {
+            if (this.thisPercent === 100) return 'bg-primary text-white';
+            return 'bg-tertiary-container text-on-tertiary-container';
+        },
+        textTitleClasses: function() {
+            if (!this.isNotWorking) return 'text-on-surface';
+            if (this.state === 'WORKING' || this.state === 'CONFIRM') return 'text-primary';
+            return 'text-on-surface';
+        },
+        textStatusClasses: function() {
+            if (!this.isNotWorking) return 'text-on-surface-variant';
+            if (this.state === 'WORKING' || this.state === 'CONFIRM') return 'text-primary-dim font-medium';
+            return 'text-on-surface-variant';
+        },
+        partIcon: function() {
+            const icons = {
+                plan: 'lightbulb',
+                design: 'palette',
+                publish: 'code'
+            };
+            return icons[this.part] || 'help';
         }
     },
+
     methods: {
         addNeedWorker: function () {
             const needWorkers = this.detailData.need_workers || [];
@@ -215,6 +275,11 @@ export default {
             .catch(error => {
                 console.log(error);
             });
+        },
+        confirmAddWorker: function () {
+            if (confirm(`'${this.partList[this.part]}' 파트에 업무를 추가 하시겠습니까?`)) {
+                this.addNeedWorker();
+            }
         },
         setWorkStatePopupOpen: function (part) {
 //				IF(THIS.DETAILDATA.REQUEST_STATE == 'COMPLETE') {

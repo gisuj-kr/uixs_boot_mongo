@@ -1,22 +1,21 @@
 package com.uixs.model.member.dto;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+
 import org.springframework.format.annotation.DateTimeFormat;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 @Setter
 @ToString
-@Document(collection = "member")
 public class MemberDTO {
-	@Id
 	private String id;
 	
 	private String userid;

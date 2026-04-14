@@ -1,39 +1,59 @@
 
 <template>
-<div class="work_form">
-    <form ref="form" name="comment_form" id="comment_form" method="post" enctype="multipart/form-data" onsubmit="return false;">
-        <select class="selectbox" name="writer_type" v-model="form.writerType">
-            <option value="MN">담당자</option>
-            <option value="PN">기획</option>
-            <option value="DS">디자인</option>
-            <option value="PB">퍼블</option>
-        </select>
-        <div class="coment_box">
-            <textarea placeholder="내용을 입력해주세요" name="content" v-model="form.content" ref="content"></textarea>
-            <div class="btn_coment">
-                <div class="file_info_area">
-                    <span class="file-info"></span>
-                    <p class="file_info" v-for="(file, index) in savedFiles" :key="file.original_filename">
-                        <span>{{file.original_filename}}</span>
-                        <a href="#" class="btn_inline_delete" @click="deleteFile(index, file.id)"></a>
-                    </p>
-                    <p class="file_info" v-for="(file, index) in form.files" :key="file.name + '_' + index">
-                        <span>{{file.name}}</span>
-                        <a href="#" class="btn_inline_delete" @click="deleteFile(index)"></a>
-                    </p>
+<div class="bg-surface-bright/50 rounded-2xl p-4 border border-outline/10 mb-6">
+    <form ref="form" name="comment_form" id="comment_form" method="post" enctype="multipart/form-data" @submit.prevent>
+        <div class="flex items-center gap-3 mb-4">
+            <span class="material-symbols-outlined text-primary-fixed-dim">account_circle</span>
+            <select 
+                class="bg-transparent text-sm font-semibold text-on-surface border-none focus:ring-0 cursor-pointer" 
+                name="writer_type" 
+                v-model="form.writerType"
+            >
+                <option value="MN">담당자</option>
+                <option value="PN">기획</option>
+                <option value="DS">디자인</option>
+                <option value="PB">퍼블</option>
+            </select>
+        </div>
+        
+        <div class="relative group">
+            <textarea 
+                class="w-full bg-white rounded-xl border-outline/20 p-4 min-h-[120px] text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-fixed-dim focus:ring-4 focus:ring-primary-fixed-dim/10 transition-all resize-none shadow-sm"
+                placeholder="내용을 입력해주세요" 
+                name="content" 
+                v-model="form.content" 
+                ref="content"
+            ></textarea>
+            
+            <div class="flex flex-wrap gap-2 mt-3 px-1">
+                <div v-for="(file, index) in savedFiles" :key="'saved_'+file.id" 
+                    class="flex items-center gap-2 bg-secondary-fixed/10 px-3 py-1.5 rounded-full border border-secondary-fixed/20 group/file">
+                    <span class="material-symbols-outlined text-sm text-secondary-fixed">attach_file</span>
+                    <span class="text-xs font-medium text-secondary-fixed">{{file.original_filename}}</span>
+                    <button @click.prevent="deleteFile(index, file.id)" class="material-symbols-outlined text-xs text-on-surface-variant hover:text-error transition-colors">close</button>
                 </div>
-                <div class="comment_btn_area" v-if="!isCompleteWork">
-                    <!-- <a href="#none" class="btn_small01" style="position: relative">파일업로드+
-                        <input 
-                            type="file" 
-                            id="cfile" 
-                            name="cfile"
-                            @change="addFile" 
-                            style="opacity: 0; width: 100%; position: absolute; left:0; top: 0">
-                    </a> -->
-                    <a href="#none" class="btn_small02 btn-regist" @click.prevent="comment__insert">{{registBtnText}}</a>
-                    <a href="#none" class="btn_small01 btn-regist" v-if="mode=='edit'" @click.prevent="cancelEdit">취소</a>
+                <div v-for="(file, index) in form.files" :key="'new_'+index" 
+                    class="flex items-center gap-2 bg-primary-fixed-dim/10 px-3 py-1.5 rounded-full border border-primary-fixed-dim/20 group/file">
+                    <span class="material-symbols-outlined text-sm text-primary-fixed-dim">add_circle</span>
+                    <span class="text-xs font-medium text-primary-fixed-dim">{{file.name}}</span>
+                    <button @click.prevent="deleteFile(index)" class="material-symbols-outlined text-xs text-on-surface-variant hover:text-error transition-colors">close</button>
                 </div>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-4" v-if="!isCompleteWork">
+                <button 
+                    v-if="mode=='edit'" 
+                    @click.prevent="cancelEdit"
+                    class="px-5 py-2.5 rounded-xl text-sm font-bold text-on-surface-variant hover:bg-surface-variant/50 transition-all"
+                >
+                    취소
+                </button>
+                <button 
+                    @click.prevent="comment__insert" 
+                    class="px-6 py-2.5 rounded-xl text-sm font-extrabold text-white bg-primary-fixed-dim shadow-lg shadow-primary-fixed-dim/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                    {{registBtnText}}
+                </button>
             </div>
         </div>
     </form>

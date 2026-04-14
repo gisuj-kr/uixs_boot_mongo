@@ -41,34 +41,34 @@ public class ChannelController {
 	 * 채널 목록
 	 * @return
 	 */
-	@RequestMapping (value= {"/channel/list.do"})
-	public String chanListView() {
-		return "/channel/chan0100";
-	}
+//	@RequestMapping (value= {"/channel/list.do"})
+//	public String chanListView() {
+//		return "/channel/chan0100";
+//	}
 	
 	/**
 	 * 채널 등록
 	 * @return
 	 */
-	@RequestMapping (value= {"/channel/insert.do"})
-	public String chanInsertView() {
-		return "/channel/chan0200";
-	}
+//	@RequestMapping (value= {"/channel/insert.do"})
+//	public String chanInsertView() {
+//		return "/channel/chan0200";
+//	}
 	
 	/**
 	 * 채널 수정
 	 * @return
 	 */
-	@RequestMapping (value= {"/channel/update.do"}, method = RequestMethod.POST)
-	public String chanUpdateView(@RequestParam("id") String id, Model model) {
-		
-		System.out.println("id::"+id);
-		ChannelDTO dto = service.selectChannelOne(id);
-		
-		model.addAttribute("channel", dto);
-		
-		return "/channel/chan0300";
-	}
+//	@RequestMapping (value= {"/channel/update.do"}, method = RequestMethod.POST)
+//	public String chanUpdateView(@RequestParam("id") String id, Model model) {
+//		
+//		System.out.println("id::"+id);
+//		ChannelDTO dto = service.selectChannelOne(id);
+//		
+//		model.addAttribute("channel", dto);
+//		
+//		return "/channel/chan0300";
+//	}
 	
 	/**
 	 * 디비에서 채널 목록 검색
@@ -123,50 +123,50 @@ public class ChannelController {
 	/**
 	 * 채널 등록 process 처리후 완료페이지로 redirect
 	 * */
-	@RequestMapping (value= {"/channel/insert.dat"}, method = RequestMethod.POST) // 테스트
-	public String insertData(ChannelDTO dto, RedirectAttributes redirect) { // 테스트
-
-		try {
-			if (dto.getIa_filepath() == null) {
-				dto.setIa_filepath("/static/xlsx/ia_"+dto.getCode()+".xlsx");
-			}
-			
-			service.insertChannel(dto);
-			
-			redirect.addFlashAttribute("param", dto);
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
-		
-		return "redirect:/channel/insert_complete.do";
-	}
+//	@RequestMapping (value= {"/channel/insert.dat"}, method = RequestMethod.POST) // 테스트
+//	public String insertData(ChannelDTO dto, RedirectAttributes redirect) { // 테스트
+//
+//		try {
+//			if (dto.getIa_filepath() == null) {
+//				dto.setIa_filepath("/static/xlsx/ia_"+dto.getCode()+".xlsx");
+//			}
+//			
+//			service.insertChannel(dto);
+//			
+//			redirect.addFlashAttribute("param", dto);
+//		}
+//		catch(Exception e) {
+//			e.printStackTrace();
+//		}
+//		
+//		return "redirect:/channel/insert_complete.do";
+//	}
 	
 	/**
 	 * 채널 등록 완료 페이지
 	 * */
-	@RequestMapping (value= {"/channel/insert_complete.do"})
-	public String insertEndView(HttpServletRequest request, Model model) {
-		
-		Map<String, ?> flashMap = RequestContextUtils.getInputFlashMap(request);
-		
-		ChannelDTO param = new ChannelDTO();
-		
-        if(flashMap!=null) {
-            
-        	param = (ChannelDTO)flashMap.get("param");
-        	
-        	model.addAttribute("name", param.getName());
-        	model.addAttribute("code", param.getCode());
-        	model.addAttribute("device", param.getDevice());
-        	model.addAttribute("cuser", param.getCuser());
-        	model.addAttribute("doc_base", param.getDoc_base());
-        	model.addAttribute("ia_filepath", param.getIa_filepath());
-        	
-        }
-		
-		return "/channel/chan0201";
-	}
+//	@RequestMapping (value= {"/channel/insert_complete.do"})
+//	public String insertEndView(HttpServletRequest request, Model model) {
+//		
+//		Map<String, ?> flashMap = RequestContextUtils.getInputFlashMap(request);
+//		
+//		ChannelDTO param = new ChannelDTO();
+//		
+//        if(flashMap!=null) {
+//            
+//        	param = (ChannelDTO)flashMap.get("param");
+//        	
+//        	model.addAttribute("name", param.getName());
+//        	model.addAttribute("code", param.getCode());
+//        	model.addAttribute("device", param.getDevice());
+//        	model.addAttribute("cuser", param.getCuser());
+//        	model.addAttribute("doc_base", param.getDoc_base());
+//        	model.addAttribute("ia_filepath", param.getIa_filepath());
+//        	
+//        }
+//		
+//		return "/channel/chan0201";
+//	}
 	
 	
 	/**
@@ -207,47 +207,47 @@ public class ChannelController {
 	/**
 	 * 채널정보 수정 process
 	 * */
-	@RequestMapping (value = {"/channel/update.dat"}, method=RequestMethod.POST)
-	public String updateData(ChannelDTO dto, RedirectAttributes redirect) {
-		
-		try {
-			int cnt = service.updateChannel(dto);
-			
-			System.out.println(cnt);
-			
-			redirect.addFlashAttribute("param", dto);
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
-		
-		return "redirect:/channel/update_complete.do";
-	}
+//	@RequestMapping (value = {"/channel/update.dat"}, method=RequestMethod.POST)
+//	public String updateData(ChannelDTO dto, RedirectAttributes redirect) {
+//		
+//		try {
+//			int cnt = service.updateChannel(dto);
+//			
+//			System.out.println(cnt);
+//			
+//			redirect.addFlashAttribute("param", dto);
+//		}
+//		catch(Exception e) {
+//			e.printStackTrace();
+//		}
+//		
+//		return "redirect:/channel/update_complete.do";
+//	}
 	
 	/**
 	 * 채널 수정완료
 	 * */
-	@RequestMapping (value = {"/channel/update_complete.do"})
-	public String updateEndView(HttpServletRequest request, Model model) {
-		
-		Map<String, ?> flashMap = RequestContextUtils.getInputFlashMap(request);
-		
-		ChannelDTO param = new ChannelDTO();
-		
-        if(flashMap!=null) {
-            
-        	param =(ChannelDTO)flashMap.get("param");
-        	
-        	model.addAttribute("name", param.getName());
-        	model.addAttribute("code", param.getCode());
-        	model.addAttribute("device", param.getDevice());
-        	model.addAttribute("cuser", param.getCuser());
-        	model.addAttribute("doc_base", param.getDoc_base());
-        	model.addAttribute("ia_filepath", param.getIa_filepath());
-        }
-        
-		return "/channel/chan0301";
-	}
+//	@RequestMapping (value = {"/channel/update_complete.do"})
+//	public String updateEndView(HttpServletRequest request, Model model) {
+//		
+//		Map<String, ?> flashMap = RequestContextUtils.getInputFlashMap(request);
+//		
+//		ChannelDTO param = new ChannelDTO();
+//		
+//        if(flashMap!=null) {
+//            
+//        	param =(ChannelDTO)flashMap.get("param");
+//        	
+//        	model.addAttribute("name", param.getName());
+//        	model.addAttribute("code", param.getCode());
+//        	model.addAttribute("device", param.getDevice());
+//        	model.addAttribute("cuser", param.getCuser());
+//        	model.addAttribute("doc_base", param.getDoc_base());
+//        	model.addAttribute("ia_filepath", param.getIa_filepath());
+//        }
+//        
+//		return "/channel/chan0301";
+//	}
 	
 	@RequestMapping (value = {"/channel/delete.dat"}, method=RequestMethod.POST)
 	@ResponseBody

@@ -19,11 +19,11 @@ public class HomeController {
 		return "/home";
 	}
 	
-	@RequestMapping("/guide/guide.do")
-	public String guide(Locale locale) {
-		
-		return "/guide/guide";
-	}
+//	@RequestMapping("/guide/guide.do")
+//	public String guide(Locale locale) {
+//		
+//		return "/guide/guide";
+//	}
 	
 	@GetMapping(value = {"/", "/{path:^(?!static|api).*$}", "/{path:^(?!static|api).*$}/{subpath:[^\\.]*}"})
     public String forwardToIndex() {

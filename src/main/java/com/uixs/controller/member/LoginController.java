@@ -40,23 +40,23 @@ public class LoginController {
 	MemberService memberService;
 
 	
-	@RequestMapping(value = {"/member/login.do"})
-	public String loginView(
-			HttpServletRequest request,
-			HttpServletResponse response,
-			@CookieValue(value="loginId", required = false) Cookie loginIdCookie) {
-		
-		logout(request, response, loginIdCookie);
-		//logger.info("userdir:" + System.getProperty("user.dir"));
-		MemberDTO admin = memberService.memberSelectOne("admin");
-		
-		// 관리자 admin 이 없는경우 admin 생성화면으로 이동
-		if (admin == null) {
-			return "/member/set_admin";
-		} else {
-			return "/member/logi0100";
-		}
-	}
+//	@RequestMapping(value = {"/member/login.do"})
+//	public String loginView(
+//			HttpServletRequest request,
+//			HttpServletResponse response,
+//			@CookieValue(value="loginId", required = false) Cookie loginIdCookie) {
+//		
+//		logout(request, response, loginIdCookie);
+//		//logger.info("userdir:" + System.getProperty("user.dir"));
+//		MemberDTO admin = memberService.memberSelectOne("admin");
+//		
+//		// 관리자 admin 이 없는경우 admin 생성화면으로 이동
+//		if (admin == null) {
+//			return "/member/set_admin";
+//		} else {
+//			return "/member/logi0100";
+//		}
+//	}
 	
 	/**
 	 * 유저 로그인

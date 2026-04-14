@@ -6,9 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Unwrapped.Nullable;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -24,9 +21,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-@Document(collection = "request_list")
 public class WorkDTOConvert {
-	@Id
 	private String id;
 	
 	private String request_id; 								// 작업요청 아이디

@@ -3,164 +3,142 @@ package com.uixs.model.ia.dao;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.uixs.model.ia.dto.IaDTO;
 
-@Repository
+@Repository("iaDao")
 public class IaDAOImp implements IaDAO {
 	
-	@Autowired
-	private MongoTemplate mongoTemplate;
-	
-	private final String COLLECTION_NAME="ia"; //테이블 이름
-	
-	
-	@SuppressWarnings("null")
+    private static final Logger logger = LoggerFactory.getLogger(IaDAOImp.class);
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    private ObjectMapper objectMapper;
+
+    public IaDAOImp() {
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+    }
+
+    private IaDTO parseJson(String json) {
+        try {
+            return objectMapper.readValue(json, IaDTO.class);
+        } catch (JsonProcessingException e) {
+            logger.error("Failed to parse JSON to IaDTO", e);
+            return null;
+        }
+    }
+
+    private String toJson(IaDTO dto) {
+        try {
+            return objectMapper.writeValueAsString(dto);
+        } catch (JsonProcessingException e) {
+            logger.error("Failed to write IaDTO to JSON", e);
+            return "{}";
+        }
+    }
+
 	@Override
 	public List<IaDTO> getIa_tree(String mode, String site_code, String parent) {
-		
-		// 자식 노드들을 찾는 쿼리
-        Criteria criteria = Criteria.where("site_code").is(site_code);
+        StringBuilder sql = new StringBuilder("SELECT doc FROM ia WHERE json_extract(doc, '$.site_code') = ?");
+        List<Object> params = new ArrayList<>();
+        params.add(site_code);
         
         if (mode != null && "parent_only".equals(mode)) {
-        	criteria = new Criteria().andOperator(
-        			criteria,
-        			Criteria.where("parent").is("#")
-        	);
+            sql.append(" AND json_extract(doc, '$.parent') = '#'");
         }
         
-        if(parent != null && !parent.isEmpty()) {
-        	criteria = new Criteria().andOperator(
-        			criteria,
-        			Criteria.where("parent").is(parent)
-        	);
+        if (parent != null && !parent.isEmpty()) {
+            sql.append(" AND json_extract(doc, '$.parent') = ?");
+            params.add(parent);
         }
         
-        Aggregation aggregation = Aggregation.newAggregation(
-				Aggregation.match(criteria),
-				Aggregation.sort(Sort.Direction.ASC, "sort")
-		);
+        sql.append(" ORDER BY CAST(json_extract(doc, '$.sort') AS INTEGER) ASC");
         
-        AggregationResults<IaDTO> result = mongoTemplate.aggregate(aggregation, COLLECTION_NAME, IaDTO.class);
-        
-        List<IaDTO> children = result.getMappedResults();
+        List<String> jsons = jdbcTemplate.queryForList(sql.toString(), String.class, params.toArray());
+        List<IaDTO> children = new ArrayList<>();
+        for (String json : jsons) {
+            IaDTO dto = parseJson(json);
+            if (dto != null) children.add(dto);
+        }
         
         return children;
-        
     }
 	
 	@Override
 	public int selectMaxSort(IaDTO iaDto) {
-		Query query = new Query();
-		
-		Criteria criteria = new Criteria();
-		
-		criteria.andOperator(
-			Criteria.where("parent").is(iaDto.getParent()),
-			Criteria.where("site_code").is(iaDto.getSite_code())
-		);
-		
-		query.addCriteria(criteria);
-		query.with(Sort.by(Sort.Direction.DESC, "sort"));
-		query.limit(1);
-		
-		IaDTO result = mongoTemplate.findOne(query, IaDTO.class, COLLECTION_NAME);
-		
-		if (result == null) {
-			return 0;
-		}
-		else {
-			return result.getSort();
-		}
+        String sql = "SELECT doc FROM ia WHERE json_extract(doc, '$.parent') = ? AND json_extract(doc, '$.site_code') = ? ORDER BY CAST(json_extract(doc, '$.sort') AS INTEGER) DESC LIMIT 1";
+        List<String> jsons = jdbcTemplate.queryForList(sql, String.class, iaDto.getParent(), iaDto.getSite_code());
+		if (jsons.isEmpty()) return 0;
+		IaDTO result = parseJson(jsons.get(0));
+		return result != null ? result.getSort() : 0;
 	}
 
 	@Override
 	public IaDTO insertIa(IaDTO iaDto) {
-		// TODO Auto-generated method stub
-		return mongoTemplate.insert(iaDto, COLLECTION_NAME);
+        if (iaDto.getId() == null || iaDto.getId().isEmpty()) {
+            iaDto.setId(UUID.randomUUID().toString().replace("-", ""));
+        }
+        jdbcTemplate.update("INSERT INTO ia (id, doc) VALUES (?, ?)", iaDto.getId(), toJson(iaDto));
+		return iaDto;
 	}
 
 	@Override
 	public IaDTO selectIaOne(String id) {
-		Query query = new Query(Criteria.where("_id").is(id));
-		
-		// TODO Auto-generated method stub
-		return mongoTemplate.findOne(query, IaDTO.class, COLLECTION_NAME);
+        List<String> jsons = jdbcTemplate.queryForList("SELECT doc FROM ia WHERE id = ?", String.class, id);
+        return jsons.isEmpty() ? null : parseJson(jsons.get(0));
 	}
 
 	@Override
 	public int updateIa(IaDTO iaDto) {
+		IaDTO existing = selectIaOne(iaDto.getId());
+		if (existing == null) return 0;
 		
-		Query query = new Query(Criteria.where("_id").is(iaDto.getId()));
+		if (iaDto.getParent() != null) existing.setParent(iaDto.getParent());
+		if (iaDto.getText() != null) existing.setText(iaDto.getText());
+		if (iaDto.getLink() != null) existing.setLink(iaDto.getLink());
+		if (iaDto.getConfirm_state() != null) existing.setConfirm_state(iaDto.getConfirm_state());
+		if (iaDto.getPublish_state() != null) existing.setPublish_state(iaDto.getPublish_state());
+		existing.setUpdate_date(LocalDateTime.now());
 		
-		Update update = new Update();
-		if (iaDto.getParent() != null) {
-			update.set("parent", iaDto.getParent());
-		}
-		
-		if (iaDto.getText() != null) {
-			update.set("text", iaDto.getText());
-		}
-		
-		if (iaDto.getLink() != null) {
-			update.set("link", iaDto.getLink());
-		}
-		
-		if (iaDto.getConfirm_state() != null) {
-			update.set("confirm_state", iaDto.getConfirm_state());
-		}
-		
-		if (iaDto.getPublish_state() != null) {
-			update.set("publish_state", iaDto.getPublish_state());
-		}
-		
-		update.set("update_date", LocalDateTime.now());
-		
-		
-		return (int) mongoTemplate.updateMulti(query, update, COLLECTION_NAME).getModifiedCount();
+        return jdbcTemplate.update("UPDATE ia SET doc = ? WHERE id = ?", toJson(existing), existing.getId());
 	}
 
 	@Override
 	public int deleteIa(String id) {
-		Query query = new Query(Criteria.where("_id").is(id));
-		// TODO Auto-generated method stub
-		return (int) mongoTemplate.remove(query, COLLECTION_NAME).getDeletedCount();
+		return jdbcTemplate.update("DELETE FROM ia WHERE id = ?", id);
 	}
 
 	@Override
 	public int updateIaSort(String id, int sort) {
-		Query query = new Query(Criteria.where("_id").is(id));
-		
-		Update update = new Update();
-		update.set("sort", sort);
-		
-		return (int) mongoTemplate.updateFirst(query, update, COLLECTION_NAME).getModifiedCount();
+		IaDTO existing = selectIaOne(id);
+		if (existing == null) return 0;
+		existing.setSort(sort);
+		return jdbcTemplate.update("UPDATE ia SET doc = ? WHERE id = ?", toJson(existing), existing.getId());
 	}
 
 	@Override
 	public int updateIaState(IaDTO dto) {
-		// TODO Auto-generated method stub
-		Query query = new Query(Criteria.where("_id").is(dto.getId()));
+		IaDTO existing = selectIaOne(dto.getId());
+		if (existing == null) return 0;
 		
-		Update update = new Update();
+		existing.setText(dto.getText());
+		existing.setLink(dto.getLink());
+		existing.setPublish_state(dto.getPublish_state());
+		existing.setConfirm_state(dto.getConfirm_state());
+		existing.setUpdate_date(dto.getUpdate_date());
 		
-		update.set("text", dto.getText());
-		update.set("link", dto.getLink());
-		update.set("publish_state", dto.getPublish_state());
-		update.set("confirm_state", dto.getConfirm_state());
-		update.set("update_date", dto.getUpdate_date());
-		
-		return (int) mongoTemplate.updateMulti(query, update, COLLECTION_NAME).getModifiedCount();
+		return jdbcTemplate.update("UPDATE ia SET doc = ? WHERE id = ?", toJson(existing), existing.getId());
 	}
 }

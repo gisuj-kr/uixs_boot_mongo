@@ -53,11 +53,13 @@ public class FileUpload {
 	public List<FileUploadDTO> uploadFiles(final List<MultipartFile> multipartFiles, Map<String, Object> uploadAddInfo) {
         List<FileUploadDTO> files = new ArrayList<>();
         
-        for (MultipartFile multipartFile : multipartFiles) {
-            if (multipartFile.isEmpty()) {
-                continue;
+        if (multipartFiles != null) {
+            for (MultipartFile multipartFile : multipartFiles) {
+                if (multipartFile.isEmpty()) {
+                    continue;
+                }
+                files.add(uploadFile(multipartFile, uploadAddInfo));
             }
-            files.add(uploadFile(multipartFile, uploadAddInfo));
         }
         return files;
     }

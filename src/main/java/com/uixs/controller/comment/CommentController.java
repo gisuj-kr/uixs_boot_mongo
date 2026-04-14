@@ -146,10 +146,12 @@ public class CommentController {
 				map.put("ref_table", "comment");
 				map.put("ref_table_key", commentDto.getId());
 				
-				List<FileUploadDTO> uploadFileList = fileUpload.uploadFiles(mtFiles, map);
-				
-				// 업로드파일 정보 저장
-				fileUploadService.saveAll(uploadFileList);
+				if (mtFiles != null) {
+					List<FileUploadDTO> uploadFileList = fileUpload.uploadFiles(mtFiles, map);
+					
+					// 업로드파일 정보 저장
+					fileUploadService.saveAll(uploadFileList);
+				}
 			}
 			
 			map.put("updateCnt", updateCnt);

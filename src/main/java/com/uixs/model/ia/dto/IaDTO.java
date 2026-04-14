@@ -1,24 +1,22 @@
 package com.uixs.model.ia.dto;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+
 import org.springframework.format.annotation.DateTimeFormat;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 @Setter
 @ToString
-@Document(collection = "member")
 public class IaDTO {
-	@Id
 	private String id;
 	private String parent;
 	private String site_code;

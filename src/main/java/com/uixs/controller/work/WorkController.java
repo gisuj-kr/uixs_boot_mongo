@@ -62,36 +62,36 @@ public class WorkController {
 	 * 
 	 * @return
 	 */
-	@RequestMapping(value = { "/work/request_insert.do" })
-	public String Request() {
-		return "/work/work0200";
-	}
+//	@RequestMapping(value = { "/work/request_insert.do" })
+//	public String Request() {
+//		return "/work/work0200";
+//	}
 
 	/**
 	 * 작업관리 view
 	 * 
 	 * @return
 	 */
-	@RequestMapping(value = { "/work/list.do" })
-	public String WorkList(Model model) {
-
-		return "/work/work0100";
-	}
+//	@RequestMapping(value = { "/work/list.do" })
+//	public String WorkList(Model model) {
+//
+//		return "/work/work0100";
+//	}
 
 	/**
 	 * 작업관리 view
 	 * 
 	 * @return
 	 */
-	@RequestMapping(value = { "/work0300" })
-	public String WorkList2() {
-		return "/work/work0300";
-	}
+//	@RequestMapping(value = { "/work0300" })
+//	public String WorkList2() {
+//		return "/work/work0300";
+//	}
 
-	@RequestMapping(value = { "/work/request/insert.view2" })
-	public String insertView2() {
-		return "/work/work0201";
-	}
+//	@RequestMapping(value = { "/work/request/insert.view2" })
+//	public String insertView2() {
+//		return "/work/work0201";
+//	}
 
 	@RequestMapping(value = { "/work/request/insert.data2" }, method = RequestMethod.POST)
 	@ResponseBody
@@ -120,7 +120,8 @@ public class WorkController {
 			WorkDTO workDto,
 			@RequestParam(value = "files", required = false) List<MultipartFile> mtFiles) throws IOException {
 
-		System.out.println(workDto.toString());
+		System.out.println("### WorkController Insert Start ###");
+		System.out.println("DTO before processing: " + workDto.toString());
 		// return object
 		Map<String, Object> map = new HashMap<String, Object>();
 
@@ -233,8 +234,12 @@ public class WorkController {
 
 		System.out.println("process_list");
 
-		workDto.setStart(params.get("start"));
-		workDto.setLimit(params.get("limit"));
+		// Pagination 기본값 설정 (null 또는 빈 값 방지)
+		String start = (params.get("start") == null || params.get("start").isEmpty()) ? "0" : params.get("start");
+		String limit = (params.get("limit") == null || params.get("limit").isEmpty()) ? "10" : params.get("limit");
+
+		workDto.setStart(start);
+		workDto.setLimit(limit);
 		workDto.setSite_code(params.get("site_code"));
 
 		if (null != params.get("search_key") && !params.get("search_key").isEmpty()) {
@@ -261,8 +266,12 @@ public class WorkController {
 
 		WorkDTO workDto = new WorkDTO();
 
-		workDto.setStart(params.get("start"));
-		workDto.setLimit(params.get("limit"));
+		// Pagination 기본값 설정 (null 또는 빈 값 방지)
+		String start = (params.get("start") == null || params.get("start").isEmpty()) ? "0" : params.get("start");
+		String limit = (params.get("limit") == null || params.get("limit").isEmpty()) ? "10" : params.get("limit");
+
+		workDto.setStart(start);
+		workDto.setLimit(limit);
 		workDto.setSite_code(params.get("site_code"));
 
 		if (null != params.get("search_key") && !params.get("search_key").isEmpty()) {

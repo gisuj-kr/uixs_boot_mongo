@@ -1,6 +1,7 @@
 <template>
-<ul>
-    <li class="write">
+<div class="space-y-2">
+    <!-- 입력부 -->
+    <div class="mb-8">
         <write-component 
             :work-id="workId" 
             :mode="writeMode" 
@@ -10,18 +11,28 @@
             @list-read="list__read"
             v-if="loginInfo">
         </write-component>
-    </li>
-    <list-component 
-        :comment-key="commentKey"
-        :key="comment.id"
-        :comment="comment" 
-        :index="index"
-        v-for="(comment, index) in commentList"
-        @edit-comment="editComment"
-        @remove-comment-item="removeCommentItem"
-        v-if="loginInfo">
-    </list-component>
-</ul>
+    </div>
+
+    <!-- 목록부 -->
+    <div class="space-y-1">
+        <list-component 
+            :comment-key="commentKey"
+            :key="comment.id"
+            :comment="comment" 
+            :index="index"
+            v-for="(comment, index) in commentList"
+            @edit-comment="editComment"
+            @remove-comment-item="removeCommentItem"
+            v-if="loginInfo">
+        </list-component>
+        
+        <!-- 검색어 없음/데이터 없음 상태 (선택사항) -->
+        <div v-if="!commentList.length" class="py-10 text-center">
+            <span class="material-symbols-outlined text-4xl text-on-surface-variant/20 mb-2">chat_bubble</span>
+            <p class="text-sm text-on-surface-variant/40 font-medium">아직 등록된 작업 내역이 없습니다.</p>
+        </div>
+    </div>
+</div>
 </template>
 	
 <script>

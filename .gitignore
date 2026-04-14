@@ -40,3 +40,9 @@ build/
 
 ### 설정 파일 (민감 정보 포함) ###
 src/main/resources/application.properties
+
+node_modules/
+*.db
+uixs.*.json
+
+migrate-data.js

@@ -30,32 +30,32 @@ public class MemberController {
 	@Autowired
 	private MemberService memberService;
 	
-	@RequestMapping (value = {"/member/list.do"})
-	public String memberListPg(Model model, String page) {
-		
-		model.addAttribute("page", page);
-		
-		return "/member/member0100";
-	}
+//	@RequestMapping (value = {"/member/list.do"})
+//	public String memberListPg(Model model, String page) {
+//		
+//		model.addAttribute("page", page);
+//		
+//		return "/member/member0100";
+//	}
 	
-	@RequestMapping (value = {"/member/insert.do"})
-	public String memberInsertPg(Model model, String page) {
-		
-		model.addAttribute("vmode", "insert");
-		model.addAttribute("page", page);
-		
-		return "/member/member0200";
-	}
+//	@RequestMapping (value = {"/member/insert.do"})
+//	public String memberInsertPg(Model model, String page) {
+//		
+//		model.addAttribute("vmode", "insert");
+//		model.addAttribute("page", page);
+//		
+//		return "/member/member0200";
+//	}
 	
-	@RequestMapping (value = {"/member/modify.do"}, method=RequestMethod.POST)
-	public String memberModifyPg(Model model, @RequestParam String userid, String page) {
-		
-		model.addAttribute("vmode", "modify");
-		model.addAttribute("userid", userid);
-		model.addAttribute("page", page);
-		
-		return "/member/member0200";
-	}
+//	@RequestMapping (value = {"/member/modify.do"}, method=RequestMethod.POST)
+//	public String memberModifyPg(Model model, @RequestParam String userid, String page) {
+//		
+//		model.addAttribute("vmode", "modify");
+//		model.addAttribute("userid", userid);
+//		model.addAttribute("page", page);
+//		
+//		return "/member/member0200";
+//	}
 	
 	/**
 	 * 최초 관리자 정보 디베에 저장

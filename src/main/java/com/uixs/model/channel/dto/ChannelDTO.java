@@ -1,24 +1,22 @@
 package com.uixs.model.channel.dto;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
-import org.bson.types.ObjectId;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+
 import org.springframework.format.annotation.DateTimeFormat;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 @Setter
 @ToString
-@Document(collection = "channel")
 public class ChannelDTO {
-	@Id
 	private String id;
 	
 	private String mongoId;

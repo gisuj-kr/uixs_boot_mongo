@@ -1,146 +1,169 @@
 <template>
-<div class="modal_layer_pop work_type"  @click="closeFromDim" v-cloak v-if="isShow">
-    <div class="modal_layer_inner" style="background:#fff">
-        <div class="pop_tit add-btn-edit">
-			<button class="btn_edit" title="수정" @click="requestWorkDelete(detailData.id)">삭제&#9998;</button>
-			<a href="#none" class="btn_pop_close" title="레이어팝업 닫기" @click="closeDetail"></a>
-		</div>
-        <div class="pop_content" style="height: 750px;">
-            <ul class="work_temp">
-                <li class="cont">
-                    <div class="work_factor">
-                        <dl>
-                            <dt>
-                                <div>ID {{detailData.site_name && '['+detailData.site_name+']'}} {{detailData.request_id}}</div>
-                                <a href="#none" 
-                                    v-if="!isTitEdit" 
-                                    @click="edit_mode('isTitEdit', 'request_title')">{{detailData.request_title}}</a>
-                                <input 
-                                    type="text" 
-                                    v-else
-                                    :value="detailData.request_title" 
-                                    ref="request_title"
-                                    @blur="edit_request('isTitEdit', 'request_title')"
-								>
-                            </dt>
-                            <dd>
-                                <div 
-                                    class="work_area" 
-                                    v-html="detailContent"
-                                    v-if="!isContEdit"
-                                    @click="edit_mode('isContEdit', 'request_content')"></div>
-                                <div 
-                                    v-else
-                                    class="work_area">
-                                    <textarea 
-                                        ref="request_content"
-                                        @blur="edit_request('isContEdit', 'request_content')">{{detailData.request_content}}</textarea>
-                                </div>
-                                
-                                <div class="work_section">
-                                    <div class="sec_02">
-                                        <p>요청자</p>
-                                        <div class="work_day" v-if="!isRequestorEdit" @click="edit_mode('isRequestorEdit', 'requestor_name')">
-                                            <span>{{detailData.requestor_name}}</span>
-                                        </div>
-										<div class="work_day" style="display:flex;align-content:center;padding:4px" v-else>
-                                            <input 
-												type="text" 
-												:value="detailData.requestor_name"  
-												ref="requestor_name" 
-												@blur="edit_request('isRequestorEdit', 'requestor_name')"
-											>
-                                        </div>
-                                    </div>
-                                    <div class="sec_02">
-                                        <p>업무요청일</p>
-                                        <div class="work_day" v-if="!dateEditMode" @click="dateEdit">
-                                            <span>{{new Date(request_date).format('yyyy-MM-dd')}} </span>
-                                        </div>
-                                        <div class="work_day" style="display:flex;align-content:center;padding:4px" v-else>
-                                            <input v-model="request_date" ref="dateInput"/>
-                                            <button type="button" class="btn_small01  mr4" @click="edit__date">수정</button>
-                                            <button type="button" class="btn_small01  mr4" @click="cancelEditDate">취소</button>
-                                        </div>
-                                    </div>
-                                    <div class="sec_02">
-                                        <p>완료 요청일</p>
-                                        <div class="work_day" v-if="!dateEditMode2" @click="dateEdit2">
-                                            <span>~ {{new Date(request_complete_date).format('yyyy-MM-dd')}}</span>
-                                        </div>
-                                        <div class="work_day" style="display:flex;align-content:center;padding:4px" v-else>
-                                            <input v-model="request_complete_date" ref="dateInput2"/>
-                                            <button type="button" class="btn_small01  mr4" @click="edit__date">수정</button>
-                                            <button type="button" class="btn_small01  mr4" @click="cancelEditDate">취소</button>
-                                        </div>
-                                    </div>
-                                </div> 
-								<!--
-                                <div class="work_file">
-                                    <p>첨부파일</p>
-                                    <ul class="mt20">
-                                        <li v-for="file in uploadFiles" :key="file.file_id">
-                                            <strong>{{file.original_filename}}</strong>
-                                            <a :href="'/file/download?file_id='+file.file_id" class="btn_text down">다운로드</a>
-                                        </li>
-                                    </ul>
-                                </div>
-								-->
-                            </dd>
-                        </dl>
+<div class="fixed inset-0 z-[100] flex items-center justify-center bg-on-background/20 backdrop-blur-sm p-4" @click.self="closeDetail" v-cloak v-if="isShow">
+    <!-- Task Detail Modal -->
+    <section class="relative w-full max-w-2xl bg-surface-container-lowest rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 flex flex-col max-h-[90vh]">
+        <!-- Header Section -->
+        <header class="flex items-start justify-between p-6 bg-surface-container-lowest border-b border-outline-variant/10 flex-shrink-0">
+            <div class="space-y-1 flex-1">
+                <p class="font-headline font-bold text-primary tracking-tight text-sm">
+                    [{{detailData.site_name}}] {{detailData.request_id}}
+                </p>
+                <!-- 제목 수정 모드 -->
+                <h2 v-if="!isTitEdit" 
+                    @click="edit_mode('isTitEdit', 'request_title')" 
+                    class="font-headline font-extrabold text-on-surface text-xl leading-tight cursor-pointer hover:text-primary transition-colors">
+                    {{detailData.request_title}}
+                </h2>
+                <input v-else 
+                    type="text" 
+                    :value="detailData.request_title" 
+                    ref="request_title" 
+                    @blur="edit_request('isTitEdit', 'request_title')"
+                    @keyup.enter="$event.target.blur()"
+                    class="w-full font-headline font-extrabold text-on-surface text-xl border-b-2 border-primary outline-none bg-transparent">
+            </div>
+            <div class="flex items-center gap-2">
+                <button @click="requestWorkDelete(detailData.id)" class="p-2 text-error hover:bg-error-container/10 rounded-full transition-colors flex items-center justify-center" title="삭제">
+                    <span class="material-symbols-outlined text-[20px]">delete</span>
+                </button>
+                <button @click="closeDetail" class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors flex items-center justify-center" title="닫기">
+                    <span class="material-symbols-outlined text-[24px]">close</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="p-6 space-y-8 overflow-y-auto custom-scrollbar">
+            <!-- 요약 정보 섹션 -->
+            <div class="grid grid-cols-3 gap-4 bg-surface-container-low p-5 rounded-xl">
+                <div class="space-y-1">
+                    <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">요청자</p>
+                    <div class="flex items-center gap-2 cursor-pointer" @click="edit_mode('isRequestorEdit', 'requestor_name')">
+                        <div class="w-6 h-6 rounded-full bg-primary-fixed-dim flex items-center justify-center text-[10px] text-white font-bold">
+                            {{detailData.requestor_name && detailData.requestor_name.substring(0,1)}}
+                        </div>
+                        <span v-if="!isRequestorEdit" class="text-sm font-semibold text-on-surface">{{detailData.requestor_name}}</span>
+                        <input v-else 
+                            type="text" 
+                            :value="detailData.requestor_name" 
+                            ref="requestor_name" 
+                            @blur="edit_request('isRequestorEdit', 'requestor_name')" 
+                            @keyup.enter="$event.target.blur()"
+                            class="text-sm font-semibold text-on-surface bg-transparent border-b border-primary outline-none w-20">
                     </div>
-                    <div class="work_step_area">
-                        <div class="work_part">
-                            <div class="btn_area">
-                                <!--
-                                <a href="#none" 
-                                    class="btn_small01 btn-all-confirm-cancel" 
-                                    v-show="!workCompleted"
-                                    @click.prevent="setWorkComplete">작업완료</a>
-                                -->
+                </div>
+                <div class="space-y-1">
+                    <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">업무요청일</p>
+                    <div v-if="!dateEditMode" @click="dateEdit" class="text-sm font-semibold text-on-surface cursor-pointer hover:text-primary">
+                        {{new Date(request_date).format('yyyy-MM-dd')}}
+                    </div>
+                    <div v-else class="flex items-center gap-1">
+                        <input v-model="request_date" ref="dateInput" class="text-xs border rounded px-1 w-24">
+                        <button @click="edit__date" class="text-[10px] bg-primary text-white px-1 rounded">확인</button>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">완료 요청일</p>
+                    <div v-if="!dateEditMode2" @click="dateEdit2" class="text-sm font-semibold text-error cursor-pointer hover:underline">
+                        ~ {{new Date(request_complete_date).format('yyyy-MM-dd')}}
+                    </div>
+                    <div v-else class="flex items-center gap-1">
+                        <input v-model="request_complete_date" ref="dateInput2" class="text-xs border rounded px-1 w-24">
+                        <button @click="edit__date" class="text-[10px] bg-primary text-white px-1 rounded">확인</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 현재 진행 단계 섹션 -->
+            <div class="space-y-4">
+                <h3 class="font-headline font-bold text-sm text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-lg">analytics</span>
+                    현재 진행 단계
+                </h3>
+                <div class="grid grid-cols-4 gap-4">
+                    <!-- 파트별 작업 컴포넌트 -->
+                    <part-state-component 
+                        v-for="part in partItems"
+                        :part="part" 
+                        :detail-data="detailData" 
+                        :key="partStateComponentKey + '_'+part">
+                    </part-state-component>
+
+                    <!-- 최종 진행중/완료 카드 -->
+                    <div class="flex flex-col items-center p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/10 shadow-sm"
+                        :class="{'border-primary border-2 shadow-md': workCompleted, 'opacity-60': !workCompleted}">
+                        <div class="relative w-12 h-12 flex items-center justify-center rounded-full mb-3"
+                            :class="workCompleted ? 'bg-primary text-on-primary' : 'bg-surface-variant text-on-surface-variant'">
+                            <span class="material-symbols-outlined">{{workCompleted ? 'check_circle' : 'running_with_errors'}}</span>
+                            <div class="absolute -bottom-1 -right-1 bg-primary text-[8px] font-bold text-white px-1.5 rounded-full border-2 border-white">
+                                {{completePercent}}%
                             </div>
-                            <ul>
-                                
-                                <!--start: 파트별 작업 진행 상태-->
-                                <part-state-component 
-                                    v-for="part in partItems"
-                                    :part="part" 
-                                    :detail-data="detailData" 
-                                    :key="partStateComponentKey + '_'+part">
-                                </part-state-component>
-                                <!--//end: 파트별 작업 진행 상태-->
-                                
-                                <li class="fix complete" :class="{'end': workCompleted}">
-                                    <span>진행중</span>
-                                    <div class="work_step_check">
-                                        <button class="btn_small01" @click.prevent="setWorkComplete">작업완료</button>
-                                    </div>
-                                    <p class="work-process-percent">{{completePercent}}%</p>
-                                </li>
-                            </ul>
                         </div>
+                        <span class="text-xs font-bold text-on-surface">진행중</span>
+                        <span class="text-[10px] text-on-surface-variant">{{workCompleted ? '완료' : '결과대기'}}</span>
                     </div>
-                    <div class="active_txt">
-                        <div class="work_message">
-                            <p>작업내역</p>
-                            <!--start: 댓글 컴포넌트-->
-                            <comment-component 
-                                v-if="Object.keys(detailData).length" 
-                                :work-id="detailData.id">
-                            </comment-component>
-                        </div>
-                    </div>
-                </li>
-            </ul>
+                </div>
+            </div>
+
+            <!-- 업무 내용 섹션 -->
+            <div class="space-y-2">
+                <h3 class="font-headline font-bold text-sm text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-lg">description</span>
+                    업무 내용
+                </h3>
+                <div v-if="!isContEdit" 
+                    class="p-4 bg-surface-container-low rounded-xl text-sm text-on-surface-variant leading-relaxed cursor-pointer hover:bg-surface-container-high transition-colors"
+                    v-html="detailContent"
+                    @click="edit_mode('isContEdit', 'request_content')">
+                </div>
+                <div v-else class="space-y-2">
+                    <textarea 
+                        ref="request_content"
+                        @blur="edit_request('isContEdit', 'request_content')"
+                        class="w-full h-32 p-4 bg-surface-container-lowest border-2 border-primary rounded-xl text-sm outline-none resize-none mx-0">{{detailData.request_content}}</textarea>
+                </div>
+            </div>
+
+            <!-- 작업 내역 섹션 (아코디언) -->
+            <div class="space-y-0 pt-4 border-t border-outline-variant/10">
+                <button class="w-full flex items-center justify-between py-2 hover:bg-surface-container-low/50 rounded-lg transition-colors group focus:outline-none" 
+                    @click="$refs.commentWrap.classList.toggle('hidden'); $refs.chevron.classList.toggle('rotate-180')">
+                    <h3 class="font-headline font-bold text-sm text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-lg">history_edu</span>
+                        작업내역
+                    </h3>
+                    <span ref="chevron" class="material-symbols-outlined transition-transform duration-200 text-on-surface-variant">expand_more</span>
+                </button>
+                <div ref="commentWrap" class="mt-4 hidden">
+                    <comment-component 
+                        v-if="Object.keys(detailData).length" 
+                        :work-id="detailData.id">
+                    </comment-component>
+                </div>
+            </div>
         </div>
-    </div>
+
+        <!-- Footer / Action Area -->
+        <footer class="p-6 bg-surface-container-low border-t border-outline-variant/10 flex justify-end gap-3 flex-shrink-0">
+            <button @click="goModifyRequest" class="px-6 py-2.5 text-sm font-bold text-primary border border-primary/20 bg-white rounded-md hover:bg-primary/5 transition-colors">
+                요청수정
+            </button>
+            <button v-show="!workCompleted" 
+                @click="setWorkComplete" 
+                class="px-6 py-2.5 text-sm font-bold bg-gradient-to-br from-primary to-primary-dim text-on-primary rounded-md shadow-md shadow-primary/20 hover:scale-[0.98] transition-transform">
+                작업완료 업데이트
+            </button>
+        </footer>
+    </section>
+
+    <!-- 파트별 상세 팝업 -->
     <parts-state-popup-component
         :id="id" 
         :this-part="passPart" 
         :detail-data="detailData" 
         v-if="isSetPopup">
     </parts-state-popup-component>
-</div>    
+</div>
 </template>
 
 <script>

@@ -44,7 +44,93 @@
 	<script type="text/javascript" src="/static/js/FileSaver.min.js"></script>
 
 	<script type="text/javascript" src="/static/js/iatree.js"></script>
+
+	<!-- Stratos Flow Design System Assets -->
+	<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+	<script id="tailwind-config">
+		tailwind.config = {
+			darkMode: "class",
+			theme: {
+				extend: {
+					"colors": {
+						"on-background": "#2c2f31",
+						"surface-bright": "#f5f7f9",
+						"primary-fixed-dim": "#6596e9",
+						"surface-tint": "#215aaa",
+						"on-surface-variant": "#595c5e",
+						"secondary-container": "#c8d8f3",
+						"on-primary": "#eff2ff",
+						"inverse-surface": "#0b0f10",
+						"on-tertiary-fixed-variant": "#005564",
+						"error-dim": "#9f0519",
+						"on-error": "#ffefee",
+						"surface-container-lowest": "#ffffff",
+						"surface-dim": "#d0d5d8",
+						"on-secondary-fixed-variant": "#46556b",
+						"on-primary-container": "#002451",
+						"on-secondary-container": "#3c4c61",
+						"tertiary-container": "#53ddfc",
+						"inverse-primary": "#73a3f8",
+						"surface": "#f5f7f9",
+						"on-secondary": "#edf3ff",
+						"surface-container-low": "#eef1f3",
+						"primary-fixed": "#73a3f8",
+						"surface-container": "#e5e9eb",
+						"error-container": "#fb5151",
+						"primary-container": "#73a3f8",
+						"tertiary-fixed": "#53ddfc",
+						"background": "#f5f7f9",
+						"error": "#b31b25",
+						"outline": "#747779",
+						"surface-container-high": "#dfe3e6",
+						"outline-variant": "#abadaf",
+						"on-tertiary-fixed": "#003640",
+						"on-tertiary-container": "#004b58",
+						"on-error-container": "#570008",
+						"secondary-fixed-dim": "#bacae4",
+						"surface-variant": "#d9dde0",
+						"secondary": "#4d5d73",
+						"on-tertiary": "#def7ff",
+						"primary": "#215aaa",
+						"inverse-on-surface": "#9a9d9f",
+						"surface-container-highest": "#d9dde0",
+						"secondary-dim": "#415166",
+						"tertiary": "#006576",
+						"on-secondary-fixed": "#29394e",
+						"primary-dim": "#0a4e9d",
+						"on-primary-fixed-variant": "#002d62",
+						"on-primary-fixed": "#000002",
+						"tertiary-dim": "#005867",
+						"secondary-fixed": "#c8d8f3",
+						"tertiary-fixed-dim": "#40ceed",
+						"on-surface": "#2c2f31"
+					},
+					"borderRadius": {
+						"DEFAULT": "0.125rem",
+						"lg": "0.25rem",
+						"xl": "0.5rem",
+						"full": "0.75rem"
+					},
+					"fontFamily": {
+						"headline": ["Manrope"],
+						"body": ["Inter"],
+						"label": ["Inter"]
+					}
+				},
+			},
+		}
+	</script>
+	<style>
+		.material-symbols-outlined {
+			font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+		}
+		.font-manrope { font-family: 'Manrope', sans-serif; }
+		[v-cloak] { display: none; }
+	</style>
 </head>
+
 
 <body>
 

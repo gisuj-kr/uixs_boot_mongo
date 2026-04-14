@@ -6,12 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Unwrapped.Nullable;
+
 import org.springframework.format.annotation.DateTimeFormat;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.uixs.util.FlexibleLocalDateDeserializer;
+import com.uixs.util.FlexibleLocalDateTimeDeserializer;
 
 import lombok.Data;
 import lombok.Getter;
@@ -19,13 +21,10 @@ import lombok.Setter;
 import lombok.ToString;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Getter
-@Setter
-@ToString
-@Document(collection = "request_list")
+@Data
 public class WorkDTO {
 
-	@Id
+
 	private String id;
 	
 	private String request_id; 								// 작업요청 아이디
@@ -56,28 +55,58 @@ public class WorkDTO {
 //	private Map<String, WorkStateDTO> work_state;
 	
 	@DateTimeFormat(pattern="yyyy-MM-ddTHH:mm:ss")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = FlexibleLocalDateTimeDeserializer.class)
 	private LocalDateTime response_date; 					// 작업 수용날짜
 	
 	@DateTimeFormat(pattern="yyyy-MM-ddTHH:mm:ss")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = FlexibleLocalDateTimeDeserializer.class)
 	private LocalDateTime complete_date; 					// 작업완료 날짜
 	
 	@DateTimeFormat(pattern="yyyy-MM-dd")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	@JsonDeserialize(using = FlexibleLocalDateDeserializer.class)
 	private LocalDate end_date; 							// 작업요청시 입력한 완료 희망일자
 	
 	@DateTimeFormat(pattern="yyyy-MM-dd")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	@JsonDeserialize(using = FlexibleLocalDateDeserializer.class)
 	private LocalDate request_date; 						// 업무요청일
 	
 	@DateTimeFormat(pattern="yyyy-MM-dd")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	@JsonDeserialize(using = FlexibleLocalDateDeserializer.class)
 	private LocalDate request_complete_date; 				// 완료 요청일
 	
 	@DateTimeFormat(pattern="yyyy-MM-ddTHH:mm:ss")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonDeserialize(using = FlexibleLocalDateTimeDeserializer.class)
 	private LocalDateTime regdate; 							// 작업요청일자
 	
 	private List<PartInfo> part;
-	
-	@Setter
-	@Getter
-	@ToString
+
+	@Data
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	public static class WorkContent {
+		private Integer id;
+		private Integer part_id;
+		private String worker;
+		private String content;
+		
+		@DateTimeFormat(pattern="yyyy-MM-dd")
+		@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+		@JsonDeserialize(using = FlexibleLocalDateDeserializer.class)
+		private LocalDate part_work_sday;  //작업 착수일
+		
+		@DateTimeFormat(pattern="yyyy-MM-dd")
+		@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+		@JsonDeserialize(using = FlexibleLocalDateDeserializer.class)
+		private LocalDate part_work_eday;  //작업 완료일
+	}
+
+	@Data
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class PartInfo {
 		private Integer id;
 		private String name;	// 파트명
@@ -88,25 +117,13 @@ public class WorkDTO {
 		private List<WorkContent> work_content;
 		
 		@DateTimeFormat(pattern="yyyy-MM-dd")
+		@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+		@JsonDeserialize(using = FlexibleLocalDateDeserializer.class)
 		private LocalDate part_work_rday;  //업무 요청일
 		
 		@DateTimeFormat(pattern="yyyy-MM-dd")
+		@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+		@JsonDeserialize(using = FlexibleLocalDateDeserializer.class)
 		private LocalDate part_work_crday;  //완료 요청일
-	}
-	
-	@Setter
-	@Getter
-	@ToString
-	public static class WorkContent {
-		private Integer id;
-		private Integer part_id;
-		private String worker;
-		private String content;
-		
-		@DateTimeFormat(pattern="yyyy-MM-dd")
-		private LocalDate part_work_sday;  //작업 착수일
-		
-		@DateTimeFormat(pattern="yyyy-MM-dd")
-		private LocalDate part_work_eday;  //작업 완료일
 	}
 }

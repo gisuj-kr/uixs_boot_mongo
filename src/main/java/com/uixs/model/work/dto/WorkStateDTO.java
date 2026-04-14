@@ -1,17 +1,14 @@
 package com.uixs.model.work.dto;
 
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import org.springframework.format.annotation.DateTimeFormat;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.uixs.MongoDateStringDeserializer;
-
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+// SQLite 마이그레이션 이후 MongoDB의 $date 형식은 사용하지 않으므로
+// MongoDateStringDeserializer 제거 및 @JsonIgnoreProperties 추가
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Setter
 @Getter
 @ToString
@@ -19,18 +16,9 @@ public class WorkStateDTO {
 	private String worker; // 담당자
 	private String state; // PENDING=대기, WORKING=작업중, CONFIRM_REQUEST=컨펌요청, CONFIRM_COMPLETE=컨펌완료
 
-	// @DateTimeFormat(pattern="yyyy-MM-dd")
-	// private LocalDateTime work_sdate; //착수일
-	@JsonDeserialize(using = MongoDateStringDeserializer.class)
-	private String work_sdate; // 착수일
+	private String work_sdate; // 착수일 (yyyy-MM-dd 형식 문자열)
 
-	// @DateTimeFormat(pattern="yyyy-MM-dd")
-	// private LocalDateTime work_temp_edate; // 예상 완료일
-	@JsonDeserialize(using = MongoDateStringDeserializer.class)
-	private String work_temp_edate; // 예상 완료일
+	private String work_temp_edate; // 예상 완료일 (yyyy-MM-dd 형식 문자열)
 
-	// @DateTimeFormat(pattern="yyyy-MM-dd")
-	// private LocalDateTime work_edate; //최종 완료일
-	@JsonDeserialize(using = MongoDateStringDeserializer.class)
-	private String work_edate; // 최종 완료일
+	private String work_edate; // 최종 완료일 (yyyy-MM-dd 형식 문자열)
 }

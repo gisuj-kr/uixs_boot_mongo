@@ -1,96 +1,101 @@
 package com.uixs.model.channel.dao;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.uixs.model.channel.dto.ChannelDTO;
-import com.uixs.model.work.dto.WorkDTO;
-import com.uixs.repository.channel.ChannelRepository;
 
-@Repository
+@Repository("channelDao")
 public class ChannelDAOImp implements ChannelDAO {
 	
-	@Autowired
-	private MongoTemplate mongoTemplate;
-	
-	@Autowired
-	ChannelRepository channelRepository;
-	
-	String COLLECTION_NAME="channel"; //테이블 이름
-	
+    private static final Logger logger = LoggerFactory.getLogger(ChannelDAOImp.class);
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    private ObjectMapper objectMapper;
+
+    public ChannelDAOImp() {
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+    }
+
+    private ChannelDTO parseJson(String json) {
+        try {
+            return objectMapper.readValue(json, ChannelDTO.class);
+        } catch (JsonProcessingException e) {
+            logger.error("Failed to parse JSON to ChannelDTO", e);
+            return null;
+        }
+    }
+
+    private String toJson(ChannelDTO dto) {
+        try {
+            return objectMapper.writeValueAsString(dto);
+        } catch (JsonProcessingException e) {
+            logger.error("Failed to write ChannelDTO to JSON", e);
+            return "{}";
+        }
+    }
+
+    @Override
 	public List<ChannelDTO> channels() {
-		List<ChannelDTO> list = mongoTemplate.findAll(ChannelDTO.class, COLLECTION_NAME);
-		
-		if(list.size() > 0) {
-			return list;
-		} else {
-			return null;
-		}
-	};
-	
-	// 채널 insert
-	public void insertChannel(ChannelDTO dto) throws Exception {
-		mongoTemplate.insert(dto, COLLECTION_NAME);
-	};
-	
-	// 채널 update
-	public int updateChannel(ChannelDTO dto) throws Exception {
-		Query query = new Query(Criteria.where("_id").is(dto.getId()));
-		
-		Update update = new Update();
-		
-		update.set("code", dto.getCode());
-		update.set("name", dto.getName());
-		update.set("cuser", dto.getCuser());
-		update.set("doc_base", dto.getDoc_base());
-		update.set("ia_filepath", dto.getIa_filepath());
-		update.set("ia_tabs", dto.getIa_tabs());
-		
-		long updatedCnt = mongoTemplate.updateFirst(query, update, ChannelDTO.class).getMatchedCount();
-		
-		return Long.valueOf(updatedCnt).intValue();
-	};
-	
-	// 채널 하나 select
-	public ChannelDTO selectChannelOne(String id) {
-		
-		System.out.println("id=="+id);
-		Query query = new Query(new Criteria("_id").is(id));
-		
-		ChannelDTO dto = mongoTemplate.findOne(query, ChannelDTO.class, COLLECTION_NAME);
-		
-		return dto;
-	};
-	
-	// 채널 하나 select
-	public ChannelDTO selectCodeOne(String code) {
-		
-		Aggregation aggregation = Aggregation.newAggregation(
-				Aggregation.match(Criteria.where("code").is(code)),
-				Aggregation.limit(1)
-		);
-		
-		AggregationResults<ChannelDTO> agResult = mongoTemplate.aggregate(aggregation, COLLECTION_NAME, ChannelDTO.class);
-		
-		ChannelDTO dto = agResult.getUniqueMappedResult();
-		
-		return dto;
-	};
-	
-	public int removeChannel(ChannelDTO dto) throws Exception{
-		Query query = new Query(Criteria.where("_id").is(dto.getId()));
-		
-		long removeCnt = mongoTemplate.remove(query, ChannelDTO.class, COLLECTION_NAME).getDeletedCount();
-		
-		return (int) removeCnt;//Long.valueOf(removeCnt).intValue();
+        List<String> jsons = jdbcTemplate.queryForList("SELECT doc FROM channel ORDER BY json_extract(doc, '$.regdate') DESC", String.class);
+        List<ChannelDTO> list = new ArrayList<>();
+        for (String json : jsons) {
+            ChannelDTO dto = parseJson(json);
+            if (dto != null) list.add(dto);
+        }
+        return list;
 	}
 	
+    @Override
+	public void insertChannel(ChannelDTO dto) throws Exception {
+        if (dto.getId() == null || dto.getId().isEmpty()) {
+            dto.setId(UUID.randomUUID().toString().replace("-", ""));
+        }
+        jdbcTemplate.update("INSERT INTO channel (id, doc) VALUES (?, ?)", dto.getId(), toJson(dto));
+	}
+	
+    @Override
+	public int updateChannel(ChannelDTO dto) throws Exception {
+        ChannelDTO existing = selectChannelOne(dto.getId());
+        if (existing == null) return 0;
+
+		existing.setCode(dto.getCode());
+		existing.setName(dto.getName());
+		existing.setCuser(dto.getCuser());
+		existing.setDoc_base(dto.getDoc_base());
+		existing.setIa_filepath(dto.getIa_filepath());
+		existing.setIa_tabs(dto.getIa_tabs());
+		
+        return jdbcTemplate.update("UPDATE channel SET doc = ? WHERE id = ?", toJson(existing), existing.getId());
+	}
+	
+    @Override
+	public ChannelDTO selectChannelOne(String id) {
+        List<String> jsons = jdbcTemplate.queryForList("SELECT doc FROM channel WHERE id = ?", String.class, id);
+        return jsons.isEmpty() ? null : parseJson(jsons.get(0));
+	}
+	
+    @Override
+	public ChannelDTO selectCodeOne(String code) {
+        List<String> jsons = jdbcTemplate.queryForList("SELECT doc FROM channel WHERE json_extract(doc, '$.code') = ?", String.class, code);
+        return jsons.isEmpty() ? null : parseJson(jsons.get(0));
+	}
+	
+    @Override
+	public int removeChannel(ChannelDTO dto) throws Exception {
+		return jdbcTemplate.update("DELETE FROM channel WHERE id = ?", dto.getId());
+	}
 }

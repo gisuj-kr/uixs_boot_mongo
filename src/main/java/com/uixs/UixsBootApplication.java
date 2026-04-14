@@ -10,12 +10,17 @@ import javax.servlet.ServletException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
 
-@SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
-@ComponentScan("com.uixs")
+@SpringBootApplication(exclude = { 
+    SecurityAutoConfiguration.class, 
+    ManagementWebSecurityAutoConfiguration.class, 
+    UserDetailsServiceAutoConfiguration.class 
+})
 public class UixsBootApplication extends SpringBootServletInitializer {
 	private static int startCount = 0;
 	
